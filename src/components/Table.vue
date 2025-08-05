@@ -17,7 +17,7 @@
 <template>
   <el-table
     :data="tableData"
-    height="75vh"
+    max-height="75vh"
     style="width: 100%"
   >
     <el-table-column

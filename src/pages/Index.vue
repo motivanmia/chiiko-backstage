@@ -1,10 +1,22 @@
 <script setup>
-  // import { useAuthStore } from '@/stores/auth';
-  import { useRoute } from 'vue-router';
-  // const authStore = useAuthStore();
+  import { useAuthGuard } from '@/stores/Auth';
+  useAuthGuard();
+
+  import { ref, onMounted } from 'vue';
+  import { useRouter, useRoute } from 'vue-router';
   import logo from '@/assets/images/logo.svg';
 
+  const router = useRouter();
   const route = useRoute();
+
+  const user = ref(null);
+
+  onMounted(() => {
+    const data = localStorage.getItem('user');
+    if (data) {
+      user.value = JSON.parse(data);
+    }
+  });
 
   const menuItems = [
     { index: '/', title: '後台人員管理' },
@@ -16,6 +28,11 @@
     { index: '/test6', title: '留言檢舉管理' },
     { index: '/test7', title: '通知管理' },
   ];
+
+  function handleLogout() {
+    localStorage.removeItem('user');
+    router.push('/login'); // ✅ 導回登入頁
+  }
 </script>
 
 <template>
@@ -54,8 +71,18 @@
     <el-container>
       <el-header>
         <div class="header">
-          <div class="header-user">黃維尼</div>
-          <button class="header-logout">登出</button>
+          <!-- <div class="header-user">黃維尼</div> -->
+          <div class="header-user">
+            {{ user?.name || '訪客' }}
+          </div>
+          <!-- <button class="header-logout">登出</button>
+            -->
+          <button
+            class="header-logout"
+            @click="handleLogout"
+          >
+            登出
+          </button>
         </div>
       </el-header>
 
@@ -128,6 +155,11 @@
           padding: px(10) px(20);
           border: px(1) solid color(backgroundColor, recipe);
           border-radius: px(15);
+          cursor: pointer;
+          &:hover {
+            background: color(backgroundColor, recipe);
+            color: color(text, light);
+          }
         }
       }
     }
