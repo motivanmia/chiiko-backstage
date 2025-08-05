@@ -121,3 +121,6 @@
 @mixin cardBoxShadow {
   box-shadow: 0 f.px(4) f.px(10) rgba(f.color(text, dark), 25%);
 }
+@mixin headerBoxShadow {
+  box-shadow: 0 f.px(0) f.px(10) rgba(f.color(text, dark), 20%);
+}
