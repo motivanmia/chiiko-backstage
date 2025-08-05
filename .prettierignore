@@ -1,0 +1,7 @@
+node_modules/
+dist/
+public/
+*.min.js
+*.config.js
+!vite.config.js
+.vscode*

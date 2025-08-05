@@ -1,8 +1,32 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [],
-})
+  scrollBehavior(to, from, savedPosition) {
+    return {
+      top: 0,
+      behavior: 'smooth',
+    };
+  },
+  routes: [
+    {
+      path: '/',
+      name: 'index',
+      component: () => import('@/pages/Index.vue'),
+      children: [
+        {
+          path: '',
+          name: 'home',
+          component: () => import('@/pages/Home.vue'),
+        },
+      ],
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/pages/Login.vue'),
+    },
+  ],
+});
 
-export default router
+export default router;
