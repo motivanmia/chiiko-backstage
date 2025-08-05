@@ -15,9 +15,14 @@ const router = createRouter({
       component: () => import('@/pages/Index.vue'),
       children: [
         {
-          path: '',
+          path: '/home',
           name: 'home',
           component: () => import('@/pages/Home.vue'),
+        },
+        {
+          path: '/member',
+          name: 'member',
+          component: () => import('@/pages/Member.vue')
         },
       ],
     },
