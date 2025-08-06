@@ -55,6 +55,17 @@ const router = createRouter({
           name: 'Notification-Management',
           component: () => import('@/pages/NotificationManagement.vue'),
         },
+        {
+          path: '/ingredient',
+          name: 'ingredient',
+          component: () => import('@/pages/Ingredient.vue'),
+        },
+        {
+          path: '/ingredient/:id',
+          name: 'IngredientDetail',
+          component: () => import('@/pages/IngredientDetail.vue'),
+          props: true,
+        },
       ],
     },
     {
