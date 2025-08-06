@@ -75,8 +75,8 @@
   function spanMethod({ row, column, rowIndex, columnIndex }) {
     // 圖片欄（第二欄）
     if (columnIndex === 1) {
-      if (rowIndex === 0) return { rowspan: 3, colspan: 1 }; // 第一張圖佔 3 列
-      if (rowIndex === 3) return { rowspan: 3, colspan: 1 }; // 第二張圖佔 3 列
+      if (rowIndex === 0) return { rowspan: 2, colspan: 1 };
+      if (rowIndex === 2) return { rowspan: 5, colspan: 1 };
       return { rowspan: 0, colspan: 0 }; // 隱藏被合併的儲存格
     }
 
