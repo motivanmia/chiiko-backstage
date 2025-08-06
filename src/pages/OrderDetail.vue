@@ -99,7 +99,7 @@
       <template #status>
         <DropMenu
           :options="dropOptions"
-          v-mode="searchOption"
+          v-model="searchOption"
           class="order-detail__dropdown"
         />
       </template>
