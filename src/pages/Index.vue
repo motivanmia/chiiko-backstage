@@ -23,12 +23,12 @@
     { index: '/', title: '後台人員管理' },
     { index: '/member', title: '會員資料查詢' },
     { index: '/recipe', title: '食譜管理' },
-    { index: '/Recipe-DetailAdmin', title: '食譜管理' },
+    // { index: '/Recipe-DetailAdmin', title: '食譜管理' },
     { index: '/test3', title: '食材學堂管理' },
     { index: '/test4', title: '商品管理' },
     { index: '/order', title: '訂單查詢' },
     { index: '/Report-Management', title: '留言檢舉管理' },
-    { index: '/Notification-Management', title: '通知管理' },
+    // { index: '/Notification-Management', title: '通知管理' },
   ];
 
   const activeMenu = computed(() => {
