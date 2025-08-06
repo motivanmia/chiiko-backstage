@@ -1,5 +1,5 @@
 <script setup>
-  import logo from '@/assets/images/logo.svg';
+  import logo from '@/assets/image/logo.svg';
   import InputField from '@/components/login/InputField.vue';
   import { ref } from 'vue';
 

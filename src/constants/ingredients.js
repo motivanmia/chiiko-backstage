@@ -4,8 +4,8 @@ export const ingredients = [
     name: '空心菜',
     category: 'vegetables',
     img: [
-      new URL('@/assets/images/ingredient/carrot.png', import.meta.url).href,
-      new URL('@/assets/images/ingredient/carrot-ng.png', import.meta.url).href,
+      new URL('@/assets/image/School/Ingredients/carrot.png', import.meta.url).href,
+      new URL('@/assets/image/School/Ingredients/carrot-ng.png', import.meta.url).href,
     ],
     status: '顯示',
     lightbox: [
@@ -37,8 +37,8 @@ export const ingredients = [
     name: '胡蘿蔔',
     category: 'vegetables',
     img: [
-      new URL('@/assets/images/ingredient/carrot.png', import.meta.url).href,
-      new URL('@/assets/images/ingredient/carrot-ng.png', import.meta.url).href,
+      new URL('@/assets/image/School/Ingredients/carrot.png', import.meta.url).href,
+      new URL('@/assets/image/School/Ingredients/carrot-ng.png', import.meta.url).href,
     ],
     status: '顯示',
     lightbox: [

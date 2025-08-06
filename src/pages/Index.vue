@@ -3,7 +3,7 @@
   import { ref, onMounted } from 'vue';
   import { useRouter, useRoute } from 'vue-router';
   import { useAuthGuard } from '@/stores/Auth';
-  import logo from '@/assets/images/logo.svg';
+  import logo from '@/assets/image/logo.svg';
 
   useAuthGuard();
 

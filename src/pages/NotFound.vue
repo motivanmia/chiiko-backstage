@@ -18,7 +18,7 @@
       <div class="not-found__pic">
         <img
           class="not-found__img"
-          src="../assets/images/logo.svg"
+          src="../assets/image/logo.svg"
           alt=""
         />
       </div>
