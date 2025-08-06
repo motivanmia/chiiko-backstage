@@ -13,7 +13,7 @@ const router = createRouter({
       path: '/',
       name: 'index',
       component: () => import('@/pages/Index.vue'),
-      
+
       children: [
         {
           path: '/home',
@@ -21,14 +21,19 @@ const router = createRouter({
           component: () => import('@/pages/Home.vue'),
         },
         {
-          path:'/recipe',
-          name:'recipe',
-          component:() => import('@/pages/Recipe.vue'),
+          path: '/recipe',
+          name: 'recipe',
+          component: () => import('@/pages/Recipe.vue'),
         },
         {
           path: '/member',
           name: 'member',
           component: () => import('@/pages/Member.vue'),
+        },
+        {
+          path: '/order',
+          name: 'order',
+          component: () => import('@/pages/Order.vue'),
         },
       ],
     },

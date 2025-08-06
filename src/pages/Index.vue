@@ -26,7 +26,7 @@
     { index: '/test2', title: '食譜管理' },
     { index: '/test3', title: '食材學堂管理' },
     { index: '/test4', title: '商品管理' },
-    { index: '/test5', title: '訂單查詢' },
+    { index: '/order', title: '訂單查詢' },
     { index: '/test6', title: '留言檢舉管理' },
     { index: '/test7', title: '通知管理' },
   ];
