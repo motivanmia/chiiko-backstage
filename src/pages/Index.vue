@@ -8,13 +8,10 @@
 
   const menuItems = [
     { index: '/', title: '後台人員管理' },
-<<<<<<< HEAD
     { index: '/test1', title: '會員資料查詢' },
     { index: '/recipe', title: '食譜管理' },
-=======
     { index: '/member', title: '會員資料查詢' },
     { index: '/test2', title: '食譜管理' },
->>>>>>> 946af28981b8486cd9255806603ab712403ba67b
     { index: '/test3', title: '食材學堂管理' },
     { index: '/test4', title: '商品管理' },
     { index: '/test5', title: '訂單查詢' },
