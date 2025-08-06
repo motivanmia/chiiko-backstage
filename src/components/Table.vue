@@ -40,8 +40,39 @@
             <switch_el />
           </slot>
         </div>
-
-        <!-- 情況三：其他所有一般文字欄位 -->
+        <!-- 情況三：圖片類型（支援單張或多張圖片） -->
+        <div v-else-if="col.type === 'image'">
+          <slot
+            :name="col.prop"
+            :row="scope.row"
+          >
+            <!-- 多張圖片（Array） -->
+            <template v-if="Array.isArray(scope.row[col.prop])">
+              <img
+                v-for="(img, idx) in scope.row[col.prop]"
+                :key="idx"
+                :src="img"
+                alt=""
+                style="
+                  width: 100px;
+                  height: 100px;
+                  object-fit: contain;
+                  border-radius: 4px;
+                  margin-right: 8px;
+                "
+              />
+            </template>
+            <!-- 單張圖片（string） -->
+            <template v-else>
+              <img
+                :src="scope.row[col.prop]"
+                alt=""
+                style="width: 100px; height: 100px; object-fit: contain; border-radius: 4px"
+              />
+            </template>
+          </slot>
+        </div>
+        <!-- 情況：其他所有一般文字欄位 -->
         <span v-else>{{ scope.row[col.prop] }}</span>
       </template>
     </el-table-column>
