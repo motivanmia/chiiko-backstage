@@ -98,13 +98,15 @@
       ></DropMenu>
       <Search class="recipe-board__search" />
     </div>
-  </div>
 
-  <div class="recipe-board__contents">
-    <Table
-      :table-data="tableData"
-      :columns="columns"
-    ></Table>
+    <div class="recipe-board__contents">
+      <Table
+        :table-data="tableData"
+        :columns="columns"
+      >
+        <template #del><Icon class="del-button" icon-name="del" /></template>
+      </Table>
+    </div>
   </div>
 </template>
 
@@ -145,6 +147,11 @@
 
     .recipe-board__contents {
       margin-top: 50px;
+      
+      .del-button{
+          font-size: 20px;
+          cursor: pointer;
+        }
     }
   }
 </style>

@@ -1,14 +1,11 @@
 <script setup>
-import { ref } from 'vue';
-import { Search } from '@element-plus/icons-vue';
-import Icon from './Icon.vue';
+  import { ref } from 'vue';
+  import { Search } from '@element-plus/icons-vue';
+  import Icon from './Icon.vue';
 
+  const searchText = ref('');
 
-
-const searchText = ref('');
-
-const handleSearch = () => {
-};
+  const handleSearch = () => {};
 </script>
 
 <template>
@@ -20,36 +17,40 @@ const handleSearch = () => {
       @keyup.enter="handleSearch"
     >
       <template #suffix>
-        <Icon icon-name="search" class="search-btn" @click="handleSearch" />
+        <Icon
+          icon-name="search"
+          class="search-btn"
+          @click="handleSearch"
+        />
       </template>
     </el-input>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.search-container {
-  width: 200px;
-}
+  .search-container {
+    width: 200px;
+  }
 
-.el-input {
-  --el-input-height: 40px;
-  border-radius: 20px;
-  
-  :deep(.el-input__wrapper) {
+  .el-input {
+    --el-input-height: 40px;
     border-radius: 20px;
-    box-shadow: none;
-    border:1px solid color(backgroundColor,recipe);
-  }
-  
-  :deep(.el-input__suffix-inner) {
-    display: flex;
-    align-items: center;
-  }
-}
 
-.search-btn {
-  color: color(search,border);
-  font-size: 20px; 
-  cursor: pointer; 
-}
+    :deep(.el-input__wrapper) {
+      border-radius: 20px;
+      box-shadow: none;
+      border: 1px solid color(backgroundColor, recipe);
+    }
+
+    :deep(.el-input__suffix-inner) {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .search-btn {
+    color: color(search, border);
+    font-size: 20px;
+    cursor: pointer;
+  }
 </style>
