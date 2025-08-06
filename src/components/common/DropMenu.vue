@@ -1,28 +1,28 @@
 <script setup>
-import 'element-plus/theme-chalk/el-cascader.css';
-import { defineProps, defineEmits, ref } from 'vue';
+  import 'element-plus/theme-chalk/el-cascader.css';
+  import { defineProps, defineEmits, ref } from 'vue';
 
-const props = defineProps({
-  options: {
-    type: Array,
-    default: () => [],
-  },
-  modelValue: {
-    type: [String, Array],
-    default: '',
-  },
-  cascaderProps: {
-    type: Object,
-    default: () => ({}),
-  },
-});
+  const props = defineProps({
+    options: {
+      type: Array,
+      default: () => [],
+    },
+    modelValue: {
+      type: [String, Array],
+      default: '',
+    },
+    cascaderProps: {
+      type: Object,
+      default: () => ({}),
+    },
+  });
 
-const emits = defineEmits(['update:modelValue', 'change']);
+  const emits = defineEmits(['update:modelValue', 'change']);
 
-const handleChange = (value) => {
-  emits('update:modelValue', value);
-  emits('change', value);
-};
+  const handleChange = (value) => {
+    emits('update:modelValue', value);
+    emits('change', value);
+  };
 </script>
 
 <template>
@@ -38,12 +38,12 @@ const handleChange = (value) => {
 </template>
 
 <style lang="scss" scoped>
-.custom-cascader {
-  width: 150px;
-  
-  ::v-deep(.el-input__wrapper) {
-    border-radius: 20px;
+  .custom-cascader {
     width: 150px;
+
+    ::v-deep(.el-input__wrapper) {
+      border-radius: 20px;
+      width: 150px;
+    }
   }
-}
 </style>

@@ -1,12 +1,12 @@
 <script setup>
-import { defineProps, defineEmits, ref } from 'vue';
+  import { defineProps, defineEmits, ref } from 'vue';
 
-const props = defineProps({
-  title: {
-    type: String, // 屬性類型為字串
-    default: '預設標題', // 設定預設值
-  },
-});
+  const props = defineProps({
+    title: {
+      type: String, // 屬性類型為字串
+      default: '預設標題', // 設定預設值
+    },
+  });
 </script>
 
 <template>
@@ -14,7 +14,7 @@ const props = defineProps({
 </template>
 
 <style lang="scss" scoped>
-  h1{
+  h1 {
     font-size: 30px;
   }
 </style>
