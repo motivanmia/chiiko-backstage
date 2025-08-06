@@ -100,4 +100,8 @@
   ::v-deep(.el-table__body tr:hover > td) {
     background-color: #ffffff !important; /* ← 你想要的 hover 顏色 */
   }
+
+  ::v-deep(.el-table__cell) {
+    text-align: center;
+  }
 </style>
