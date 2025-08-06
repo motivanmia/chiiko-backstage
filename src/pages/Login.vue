@@ -74,6 +74,22 @@
         <button id="btn_login">登入</button>
       </form>
     </div>
+    <div class="copyright">
+      本網站為緯育TibaMe前端設計工程師班第 92 期學員專題成果作品，本平台僅供學習、展示之用。
+      <br />
+      若有抵觸有關著作權,或有第三人主張侵害智慧財產權等情事,均由學員負法律上責任,緯育公司概不負責。
+      <br />
+      若有侵權疑慮,您可以私訊
+      <a
+        href="https://www.facebook.com/TibaMe"
+        class="tibame__link"
+      >
+        緯育TibaMe
+      </a>
+      , 後續會由專人協助處理。
+      <br />
+      © 2025 Chiiko. All rights reserved.
+    </div>
     <transition name="fade">
       <div
         v-if="noSuccess"
@@ -97,8 +113,11 @@
 <style lang="scss" scoped>
   #background {
     background-color: #fefbf1;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     #header {
       background: color(backgroundColor, recipe);
       display: flex;
@@ -141,6 +160,14 @@
         &:hover {
           background: color(backgroundColor, recipe);
         }
+      }
+    }
+    .copyright {
+      padding-bottom: 30px;
+      text-align: center;
+      color: color(text, base);
+      .tibame__link {
+        color: color(text, base);
       }
     }
     /* 彈窗樣式 */
