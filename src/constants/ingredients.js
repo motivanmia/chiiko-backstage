@@ -4,8 +4,8 @@ export const ingredients = [
     name: '空心菜',
     category: 'vegetables',
     img: [
-      new URL('@/assets/image/School/Ingredients/carrot.png', import.meta.url).href,
-      new URL('@/assets/image/School/Ingredients/carrot-ng.png', import.meta.url).href,
+      new URL('@/assets/image/School/Ingredients/waterspinach.png', import.meta.url).href,
+      new URL('@/assets/image/School/Ingredients/waterspinach-ng.png', import.meta.url).href,
     ],
     status: '顯示',
     lightbox: [
@@ -64,5 +64,38 @@ export const ingredients = [
     preservation: `- 胡蘿蔔建議去除葉部後裝入塑膠袋密封，置於冷藏室 0～5°C 保存。
 - 避免與蘋果、香蕉等釋放乙烯的水果放在一起，以防加速老化。
 - 冷藏可保存約 1～2 週，最佳口感在 5 日內。`,
+  },
+  {
+    id: '003',
+    name: '花椰菜',
+    category: 'vegetables',
+    img: [
+      new URL('@/assets/image/School/Ingredients/cauliflower.png', import.meta.url).href,
+      new URL('@/assets/image/School/Ingredients/cauliflower-ng.png', import.meta.url).href,
+    ],
+    status: '顯示',
+    lightbox: [
+      {
+        goodtitle: '色澤潔白或淡綠',
+        badtitle: '表面泛黃發黑',
+        goodcontent: '新鮮花椰菜應色澤均勻，無明顯變色。',
+        badcontent: '發黃或有黑點代表老化或腐壞。',
+      },
+      {
+        goodtitle: '花球緊密紮實',
+        badtitle: '花球鬆散變形',
+        goodcontent: '花球結構緊實為新鮮指標。',
+        badcontent: '鬆散代表存放過久或品質差。',
+      },
+      {
+        goodtitle: '無異味或水漬',
+        badtitle: '潮濕軟爛有異味',
+        goodcontent: '乾爽且無異味表示良好狀態。',
+        badcontent: '異味或濕黏感為腐敗前兆。',
+      },
+    ],
+    preservation: `- 花椰菜建議用報紙包裹後裝袋，置於冷藏室下層保存，溫度約 0～5°C。
+- 保存時避免清洗，保持乾燥可延長新鮮度。
+- 建議 3～5 天內食用完畢，避免花球變色或變質。`,
   },
 ];
