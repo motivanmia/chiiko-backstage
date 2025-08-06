@@ -40,6 +40,16 @@ const router = createRouter({
           name: 'order-detail',
           component: () => import('@/pages/OrderDetail.vue'),
         },
+        {
+          path: '/Report-Management',
+          name: 'Report-Management',
+          component: () => import('@/pages/ReportManagement.vue'),
+        },
+        {
+          path: '/Recipe-DetailAdmin',
+          name: 'RecipeDetailAdmin',
+          component: () => import('@/pages/RecipeDetailAdmin.vue'),
+        },
       ],
     },
     {
