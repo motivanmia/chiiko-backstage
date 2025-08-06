@@ -3,7 +3,6 @@
     <div class="recipe-board">
       <div class="recipe-board__manage">
         <MyTitle title="留言檢舉管理"></MyTitle>
-        <IncreaseButton></IncreaseButton>
       </div>
 
       <div class="recipe-board__query">
@@ -18,7 +17,6 @@
     </div>
 
     <div class="recipe-board__contents">
-      <!-- ✨ 修改點 1：監聽來自 Table 元件的自訂事件 -->
       <Table
         :table-data="tableData"
         :columns="columns"
@@ -26,10 +24,12 @@
       ></Table>
     </div>
 
-    <!-- ✨ 修改點 2：將 ReportDetailModal 元件加入到模板中 -->
-    <ReportDetailModal
+    <!-- ✨ 修改點 1：將元件標籤改為 DetailModal -->
+    <DetailModal
       :show="isModalVisible"
-      :report="selectedReport"
+      :type="'report'"
+      :title="'留言檢舉管理'"
+      :data="selectedReport"
       @close="isModalVisible = false"
       @save="handleSaveChanges"
     />
@@ -42,13 +42,12 @@
   import DropMenu from '@/components/common/DropMenu.vue';
   import Search from '@/components/common/Search.vue';
   import MyTitle from '@/components/common/Title.vue';
-  import IncreaseButton from '@/components/common/IncreaseButton.vue';
   import Table from '@/components/Table.vue';
-  import ReportDetailModal from '@/components/ReportDetailModal.vue';
+  import DetailModal from '@/components/DetailModal.vue';
 
   // --- 燈箱狀態控制 ---
-  const isModalVisible = ref(false); // 控制燈箱是否顯示
-  const selectedReport = ref(null); // 儲存當前被選中要查看詳情的檢舉資料
+  const isModalVisible = ref(false);
+  const selectedReport = ref(null);
 
   // --- 您原有的 Script 內容 ---
   const selectedStatus = ref('');
@@ -120,49 +119,41 @@
     },
   ]);
 
-  // --- ✨ 修改點 4：新增處理事件的函式 ---
-
-  // 當表格中的「詳細」按鈕被點擊時，此函式會被觸發
+  // --- 事件處理函式 ---
   function handleDetailClick(rowData) {
-    // rowData 就是 Table 元件傳回來的那一整行的資料
-    selectedReport.value = rowData; // 將這筆資料存起來，準備傳給燈箱
-    isModalVisible.value = true; // 打開燈箱
+    selectedReport.value = rowData;
+    isModalVisible.value = true;
   }
 
-  // 當燈箱中的「儲存」按鈕被點擊時，此函式會被觸發
   function handleSaveChanges(updateInfo) {
-    // updateInfo 的格式會是 { id: '...', newStatus: '...' }
-    // 找到我們表格資料中對應的那一筆
     const reportToUpdate = tableData.value.find((item) => item.number === updateInfo.id);
     if (reportToUpdate) {
-      // 更新它的狀態
-      // 這裡需要將英文的 value 轉回中文的 label 來顯示在表格上
       const statusObj = reportStatusOptions.value.find((opt) => opt.value === updateInfo.newStatus);
       if (statusObj) {
         reportToUpdate.status = statusObj.label;
       }
     }
-    // 儲存成功後，關閉燈箱
     isModalVisible.value = false;
   }
 </script>
 
 <style lang="scss" scoped>
-  /* 你的 style 區塊完全不需要修改 */
   .page-container {
-    padding: 2rem; /* 給頁面一些內距 */
+    padding: 2rem;
   }
   .recipe-board {
     &__manage {
       display: flex;
       justify-content: space-between;
-      align-content: center;
+      align-items: center; /* 使用 align-items 更適合單行 flex 佈局 */
     }
 
+    /* ✨ 關鍵修正點：從這裡開始 */
     &__query {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      grid-template-rows: auto;
+      display: flex; /* 改回使用 Flexbox，因為它對這種兩端對齊的簡單佈局更直觀 */
+      justify-content: space-between; /* 關鍵！將下拉選單和搜尋框推向左右兩側 */
+      align-items: center; /* 讓它們垂直置中 */
+
       margin-top: 27px;
       position: relative;
 
@@ -175,16 +166,14 @@
         bottom: -30px;
       }
 
-      .recipe-board__drop {
-        grid-column: 2/3;
-        grid-row: 1;
-        align-self: center;
-      }
-      .recipe-board__search {
-        grid-column: 5/6;
-        grid-row: 1;
-      }
+      /* 
+        我們不再需要 grid-column 的設定了，
+        justify-content: space-between 會自動處理對齊。
+      */
+      // .recipe-board__drop { ... } (移除)
+      // .recipe-board__search { ... } (移除)
     }
+    /* ✨ 關鍵修正點：結束 */
 
     &__contents {
       margin-top: 50px;

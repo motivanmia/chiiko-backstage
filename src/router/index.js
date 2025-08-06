@@ -50,6 +50,11 @@ const router = createRouter({
           name: 'RecipeDetailAdmin',
           component: () => import('@/pages/RecipeDetailAdmin.vue'),
         },
+        {
+          path: '/Notification-Management',
+          name: 'Notification-Management',
+          component: () => import('@/pages/NotificationManagement.vue'),
+        },
       ],
     },
     {
