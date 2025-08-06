@@ -22,7 +22,7 @@
       del: '',
     })),
   );
-  console.log(tableData);
+  // console.log(tableData);
 
   const router = useRouter();
 
