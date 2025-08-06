@@ -13,6 +13,7 @@ const router = createRouter({
       path: '/',
       name: 'index',
       component: () => import('@/pages/Index.vue'),
+      
       children: [
         {
           path: '/home',
@@ -27,7 +28,7 @@ const router = createRouter({
         {
           path: '/member',
           name: 'member',
-          component: () => import('@/pages/Member.vue')
+          component: () => import('@/pages/Member.vue'),
         },
       ],
     },
