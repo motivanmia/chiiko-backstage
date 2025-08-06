@@ -1,10 +1,11 @@
 <script setup>
-  import { useAuthGuard } from '@/stores/Auth';
-  useAuthGuard();
-
+  import { computed } from 'vue';
   import { ref, onMounted } from 'vue';
   import { useRouter, useRoute } from 'vue-router';
+  import { useAuthGuard } from '@/stores/Auth';
   import logo from '@/assets/images/logo.svg';
+
+  useAuthGuard();
 
   const router = useRouter();
   const route = useRoute();
@@ -31,6 +32,19 @@
     { index: '/test7', title: '通知管理' },
   ];
 
+  const activeMenu = computed(() => {
+    const path = route.path;
+
+    if (path === '/recipe') return '/recipe';
+
+    if (path === '/member') return '/member';
+
+    const orderPaths = ['/order', '/order-detail'];
+    if (orderPaths.includes(path)) return '/order';
+
+    return path;
+  });
+
   function handleLogout() {
     localStorage.removeItem('user');
     router.push('/login'); // ✅ 導回登入頁
@@ -56,7 +70,7 @@
         </div>
       </router-link>
       <el-menu
-        :default-active="route.path"
+        :default-active="activeMenu"
         router
       >
         <template

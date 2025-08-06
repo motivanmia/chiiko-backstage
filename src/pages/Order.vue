@@ -1,9 +1,13 @@
 <script setup>
-  import { ref, computed, watch } from 'vue';
+  import { ref, computed } from 'vue';
+  import { useRouter } from 'vue-router';
   import Title_el from '@/components/common/Title.vue';
   import DropMenu from '@/components/common/DropMenu.vue';
   import Search from '@/components/common/Search.vue';
   import Table_el from '@/components/Table.vue';
+  import Icon from '@/components/common/Icon.vue';
+
+  const router = useRouter();
 
   const searchOption = ref('all');
 
@@ -105,29 +109,65 @@
 
     return result;
   });
+
+  const goOrderDetail = () => {
+    router.push({ path: '/order-detail' });
+  };
 </script>
 
 <template>
-  <Title_el title="訂單管理" />
-  <div class="order__wrap">
-    <DropMenu
-      :options="dropOptions"
-      v-model="searchOption"
-    />
-    <Search />
+  <div class="order">
+    <div class="order__header">
+      <Title_el
+        title="訂單管理"
+        class="order__title"
+      />
+      <div class="order__wrap">
+        <DropMenu
+          :options="dropOptions"
+          v-model="searchOption"
+        />
+        <Search />
+      </div>
+    </div>
+    <Table_el
+      :table-data="filteredTableData"
+      :columns="columns"
+      class="order__table"
+    >
+      <template #icon>
+        <Icon
+          icon-name="detail"
+          @click="goOrderDetail"
+          class="order__icon"
+        />
+      </template>
+    </Table_el>
   </div>
-  <Table_el
-    :table-data="filteredTableData"
-    :columns="columns"
-  />
 </template>
 
 <style lang="scss" scoped>
   .order {
+    &__header {
+      padding: 0 px(20);
+      border-bottom: px(1) solid color(backgroundColor, recipe);
+    }
+    &__title {
+      margin-bottom: px(20);
+    }
+
     &__wrap {
       @include flex($jc: space-between);
-      padding: px(20) 0;
-      border-bottom: px(1) solid color(backgroundColor, recipe);
+      padding-bottom: px(20);
+    }
+
+    &__table {
+      margin-top: px(15);
+    }
+
+    &__icon {
+      @include font-size(20);
+      cursor: pointer;
     }
   }
 </style>
