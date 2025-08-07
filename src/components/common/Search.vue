@@ -1,17 +1,32 @@
 <script setup>
-  import { ref } from 'vue';
-  import { Search } from '@element-plus/icons-vue';
+  import { computed } from 'vue';
   import Icon from './Icon.vue';
 
-  const searchText = ref('');
+  const props = defineProps({
+    modelValue: {
+      type: String,
+      required: true,
+    },
+  });
 
-  const handleSearch = () => {};
+  const emit = defineEmits(['update:modelValue', 'search']);
+
+  const inputValue = computed({
+    get: () => props.modelValue,
+    set: (val) => {
+      emit('update:modelValue', val);
+    },
+  });
+
+  const handleSearch = () => {
+    emit('search', props.modelValue);
+  };
 </script>
 
 <template>
   <div class="search-container">
     <el-input
-      v-model="searchText"
+      v-model="inputValue"
       placeholder="搜尋"
       clearable
       @keyup.enter="handleSearch"
