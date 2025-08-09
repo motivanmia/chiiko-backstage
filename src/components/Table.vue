@@ -41,7 +41,7 @@
           </slot>
         </div>
         <!-- 情況四：圖片類型 -->
-        <div v-if="col.type === 'image'">
+        <div v-else-if="col.type === 'image'">
           <slot
             :name="col.prop"
             :row="scope.row"

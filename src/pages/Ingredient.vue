@@ -1,57 +1,68 @@
 <script setup>
   import 'element-plus/theme-chalk/el-cascader.css';
-
-  import { ref } from 'vue';
-  import DropMenu from '@/components/common/DropMenu.vue';
-
-  import Search from '@/components/common/Search.vue';
-  import MyTitle from '@/components/common/Title.vue';
-  import IncreaseButton from '@/components/common/IncreaseButton.vue';
-  import Table from '@/components/Table.vue';
+  import { ref, computed } from 'vue';
   import { useRouter } from 'vue-router';
-  import { ingredients } from '@/constants/ingredients.js';
 
+  import Table from '@/components/Table.vue';
+  import TheHeader from '@/components/common/TheHeader.vue';
+  import { ingredients } from '@/constants/ingredients.js';
+  import switch_el from '@/components/Switch.vue';
+
+  // 原始資料
   const tableData = ref(
     ingredients.map((item) => ({
       number: item.id,
-      category: item.category,
+      category: item.category, // e.g. 'vegetables' | 'meat'
       name: item.name,
-      img: item.img[0],
-      status: item.status || '',
+      img: item.img?.[0] || '',
+      status: '',
       icon: '',
       del: '',
     })),
   );
-  // console.log(tableData);
 
   const router = useRouter();
-
-  function goToDetail(row) {
-    router.push({
-      name: 'IngredientDetail',
-      params: { id: row.number },
-    });
+  function goToDetail(rowOrPayload) {
+    // 若你的 Table 會回傳 { type, row }，可以這樣分流：
+    const row = rowOrPayload?.row ?? rowOrPayload;
+    // if (rowOrPayload?.type && rowOrPayload.type !== 'icon') return;
+    router.push({ name: 'IngredientDetail', params: { id: row.number } });
   }
-  const selectedStatus = ref(''); // 用於儲存使用者選擇的結果
 
-  const IngredientOptions = [
-    {
-      value: 'draft',
-      label: '植物性食材',
-    },
-    {
-      value: 'approved',
-      label: '動物性食材',
-    },
+  const categoryOptions = [
+    { label: '全部', value: 'all' },
+    { label: '植物性食材', value: 'vegetables' },
+    { label: '動物性食材', value: 'meat' },
   ];
 
-  // 搜尋
+  const searchOption = ref('all');
   const searchText = ref('');
 
-  const handleSearch = () => {};
+  const filteredTableData = computed(() => {
+    const rawCat = searchOption.value;
+    // console.log(rawCat);
 
-  //內容
+    const cat = typeof rawCat === 'array' && rawCat !== null ? rawCat.value : String(rawCat || '');
+    // console.log(cat);
 
+    const kw = searchText.value.trim().toLowerCase();
+
+    // 1) 先按分類（就算沒有關鍵字也要先篩）
+    let rows = tableData.value;
+    if (cat && cat !== 'all') {
+      rows = rows.filter((r) => r.category === cat);
+    }
+
+    // 2) 再按關鍵字（這裡示範只搜名稱，要搜更多欄位就加）
+    if (!kw) return rows;
+    return rows.filter((r) => {
+      const nameHit = String(r.name).toLowerCase().includes(kw);
+      const numberHit = String(r.number).toLowerCase().includes(kw);
+      return nameHit || numberHit;
+    });
+  });
+
+  // 表格欄位
   const columns = ref([
     { prop: 'number', label: '食材編號', width: 140 },
     { prop: 'category', label: '食材分類', width: 140 },
@@ -65,67 +76,35 @@
 
 <template>
   <div class="ingredient-board">
-    <div class="ingredient-board__manage">
-      <MyTitle title="食材管理"></MyTitle>
-      <IncreaseButton></IncreaseButton>
-    </div>
-
-    <div class="ingredient-board__query">
-      <DropMenu
-        v-model="selectedStatus"
-        :options="IngredientOptions"
-        class="ingredient-board__drop"
-      ></DropMenu>
-      <Search class="ingredient-board__search" />
-    </div>
+    <TheHeader
+      title="食材管理"
+      v-model:searchOption="searchOption"
+      v-model:searchText="searchText"
+      :dropOptions="categoryOptions"
+      :show-increase-button="false"
+    />
   </div>
 
   <div class="ingredient-board__contents">
     <Table
-      :table-data="tableData"
+      :table-data="filteredTableData"
       :columns="columns"
       @button-click="goToDetail"
-    ></Table>
+    >
+      <template #status>
+        <switch_el
+          yes="顯示"
+          no="隱藏"
+        />
+      </template>
+      <template #del>
+        <Icon
+          class="del-button"
+          icon-name="del"
+        />
+      </template>
+    </Table>
   </div>
 </template>
 
-<style lang="scss" scoped>
-  .ingredient-board {
-    &__manage {
-      display: flex;
-      justify-content: space-between;
-      align-content: center;
-    }
-
-    &__query {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      grid-template-rows: auto;
-      margin-top: 27px;
-      position: relative;
-
-      &::after {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 1px;
-        background-color: color(backgroundColor, ingredient);
-        bottom: -30px;
-      }
-
-      .ingredient-board__drop {
-        grid-column: 2/3;
-        grid-row: 1;
-        align-self: center;
-      }
-      .ingredient-board__search {
-        grid-column: 5/6;
-        grid-row: 1;
-      }
-    }
-
-    .ingredient-board__contents {
-      margin-top: 50px;
-    }
-  }
-</style>
+<style lang="scss" scoped></style>
