@@ -28,7 +28,6 @@
     { index: '/product', title: '商品管理' },
     { index: '/order', title: '訂單查詢' },
     { index: '/Report-Management', title: '留言檢舉管理' },
-    { index: '/test7', title: '通知管理' },
   ];
 
   const activeMenu = computed(() => {

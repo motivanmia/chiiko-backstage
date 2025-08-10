@@ -23,7 +23,7 @@
         </div>
 
         <!-- 編輯類型 -->
-        <div v-if="col.type === 'button-edit'">
+        <div v-else-if="col.type === 'button-edit'">
           <Icon
             icon-name="edit"
             class="icon"
@@ -32,7 +32,7 @@
         </div>
 
         <!-- 刪除按鈕 -->
-        <div v-if="col.type === 'button-del'">
+        <div v-else-if="col.type === 'button-del'">
           <Icon
             icon-name="del"
             class="icon"
@@ -55,7 +55,10 @@
         </div>
 
         <!-- 一般文字 -->
-        <span v-else>
+        <span
+          v-else
+          class="text"
+        >
           {{ scope.row[col.prop] }}
         </span>
       </template>
@@ -117,5 +120,8 @@
 
   ::v-deep(.el-table__cell) {
     text-align: center;
+  }
+  ::v-deep(.el-table__cell .text) {
+    @include ellipsis($line: 1);
   }
 </style>
