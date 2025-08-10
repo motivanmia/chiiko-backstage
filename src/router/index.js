@@ -66,6 +66,11 @@ const router = createRouter({
           component: () => import('@/pages/IngredientDetail.vue'),
           props: true,
         },
+        {
+          path: '/product',
+          name: 'product',
+          component: () => import('@/pages/Product.vue'),
+        },
       ],
     },
     {
