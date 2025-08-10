@@ -20,14 +20,14 @@
     { prop: 'ingredientId', label: '食材編號', width: 140 },
     { prop: 'ingredientCategory', label: '食材分類', width: 140 },
     { prop: 'ingredientName', label: '食材名稱', width: 200 },
-    { prop: 'ingredientImage', label: '食材圖片', type: 'image' },
+    { prop: 'ingredientImage', label: '食材圖片', type: 'image'},
     { prop: 'ingredientStatus', label: '狀態', type: 'status', width: 140 },
   ]);
 
   /** —— 第二張表：挑選指南 —— */
   const ingredientGuideColumns = ref([
     { prop: 'goodText', label: '左側說明項目', width: 400 },
-    { prop: 'comparisonImage', label: '圖片', type: 'image' },
+    { prop: 'comparisonImage', label: '圖片', type: 'image', width:150 },
     { prop: 'badText', label: '右側說明項目', width: 400 },
     { prop: 'preservationText', label: '保存方法', width: 400 },
   ]);

@@ -11,64 +11,60 @@
       :label="col.label"
       :width="col.width"
     >
-      <!-- ✨ [修正] 將所有顯示邏輯合併到同一個 #default 插槽中，避免渲染錯誤 -->
       <template #default="scope">
-        <!-- 情況一：如果是按鈕類型 -->
-        <div v-if="col.type === 'button'">
-          <slot
-            :name="col.prop"
-            :row="scope.row"
-          >
-            <!-- 預設顯示的圖示按鈕 -->
-            <!-- ✨ [關鍵] 1. 為圖示加上 @click 事件 -->
-            <!-- ✨ [修正] 2. 將 id="icon" 改為 class="detail-icon"，避免 ID 重複 -->
-            <icon
-              icon-name="detail"
-              class="detail-icon"
-              @click="handleIconClick(scope.row)"
-            />
-          </slot>
+        <!-- 按鈕類型 -->
+        <!-- 查看詳細類型 -->
+        <div v-if="col.type === 'button-detail'">
+          <Icon
+            icon-name="detail"
+            class="icon"
+            @click="handleIconClick(scope.row)"
+          />
         </div>
 
-        <!-- 情況二：如果是狀態開關類型 -->
+        <!-- 編輯類型 -->
+        <div v-if="col.type === 'button-edit'">
+          <Icon
+            icon-name="edit"
+            class="icon"
+            @click="handleIconClick(scope.row)"
+          />
+        </div>
+
+        <!-- 刪除按鈕 -->
+        <div v-if="col.type === 'button-del'">
+          <Icon
+            icon-name="del"
+            class="icon"
+            @click="handleIconClick(scope.row)"
+          />
+        </div>
+
+        <!-- 狀態開關類型 -->
         <div v-else-if="col.type === 'status'">
-          <slot
-            :name="col.prop"
-            :row="scope.row"
-          >
-            <!-- 預設顯示的開關 -->
-            <switch_el />
-          </slot>
+          <switch_el />
         </div>
-        <!-- 情況四：圖片類型 -->
+
+        <!-- 圖片類型 -->
         <div v-else-if="col.type === 'image'">
-          <slot
-            :name="col.prop"
-            :row="scope.row"
-          >
-            <!-- 預設顯示圖片 -->
-            <img
-              :src="scope.row[col.prop]"
-              alt=""
-              style="
-                width: 100px;
-                height: 100px;
-                object-fit: cover;
-                border-radius: 4px;
-                object-fit: contain;
-              "
-            />
-          </slot>
+          <img
+            :src="scope.row[col.prop]"
+            alt=""
+            style="width: 100px; height: 100px; border-radius: 4px; object-fit: contain"
+          />
         </div>
-        <!-- 情況：其他所有一般文字欄位 -->
-        <span v-else>{{ scope.row[col.prop] }}</span>
+
+        <!-- 一般文字 -->
+        <span v-else>
+          {{ scope.row[col.prop] }}
+        </span>
       </template>
     </el-table-column>
   </el-table>
 </template>
 
 <script setup>
-  import icon from '@/components/common/Icon.vue';
+  import Icon from '@/components/common/Icon.vue';
   import switch_el from '@/components/Switch.vue';
 
   defineProps({
@@ -93,8 +89,7 @@
 </script>
 
 <style lang="scss" scoped>
-  /* ✨ [修正] 3. 將 #id 選擇器改為 .class 選擇器 */
-  .detail-icon {
+  .icon {
     font-size: 20px;
     &:hover {
       cursor: pointer;

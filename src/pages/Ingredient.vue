@@ -69,8 +69,8 @@
     { prop: 'name', label: '食材名稱', width: 200 },
     { prop: 'img', label: '食材圖片', type: 'image' },
     { prop: 'status', label: '狀態', type: 'status', width: 140 },
-    { prop: 'icon', label: '詳細', type: 'button', width: 60 },
-    { prop: 'del', label: '刪除', type: 'button', width: 60 },
+    { prop: 'icon', label: '詳細', type: 'button-detail', width: 60 },
+    { prop: 'del', label: '刪除', type: 'button-del', width: 60 },
   ]);
 </script>
 

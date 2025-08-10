@@ -45,8 +45,8 @@
     { prop: 'author', label: '作者' },
     { prop: 'date', label: '新增日期' },
     { prop: 'status', label: '會員狀態', type: 'status' },
-    { prop: 'icon', label: '詳細', type: 'button', width: 60 },
-    { prop: 'del', label: '刪除', type: 'button', width: 60 },
+    { prop: 'icon', label: '詳細', type: 'button-detail', width: 60 },
+    { prop: 'del', label: '刪除', type: 'button-del', width: 60 },
   ]);
 
   const tableData = ref([

@@ -1,6 +1,7 @@
 <script setup>
   import table_el from '@/components/Table.vue';
   import { ref } from 'vue';
+  import TheHeader from '@/components/common/TheHeader.vue';
 
   const columns = ref([
     { prop: 'number', label: '會員編號', width: 100 },
@@ -9,8 +10,14 @@
     { prop: 'email', label: 'E-mail' },
     { prop: 'date', label: '加入日期' },
     { prop: 'status', label: '會員狀態', type: 'status' },
-    { prop: 'icon', label: '詳細', type: 'button', width: 60 },
+    { prop: 'icon', label: '詳細', type: 'button-detail', width: 60 },
   ]);
+
+    const categoryOptions = [
+    { label: '全部', value: 'all' },
+    { label: '正常', value: 'Active' },
+    { label: '停權', value: 'Disabled' },
+  ];
 
   const tableData = ref([
     {
@@ -73,6 +80,9 @@
 </script>
 
 <template>
+  <TheHeader
+    title="會員管理"
+    :dropOptions="categoryOptions"/>
   <table_el
     :table-data="tableData"
     :columns="columns"

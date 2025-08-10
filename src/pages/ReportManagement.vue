@@ -68,7 +68,7 @@
     { prop: 'offender_id', label: '留言會員編號' },
     { prop: 'comment_content', label: '留言內容', width: 0 },
     { prop: 'status', label: '處理狀況' },
-    { prop: 'actions', label: '詳細', type: 'button', width: 90 },
+    { prop: 'actions', label: '詳細', type: 'button-detail', width: 90 },
   ]);
 
   const tableData = ref([
