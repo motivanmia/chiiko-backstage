@@ -4,12 +4,11 @@
   import TheHeader from '@/components/common/TheHeader.vue';
 
   const columns = ref([
-    { prop: 'number', label: '會員編號', width: 200 },
-    { prop: 'name', label: '姓名', width: 200 },
-    { prop: 'text', label: '暱稱' },
-    { prop: 'email', label: 'E-mail' },
-    { prop: 'date', label: '加入日期' },
-    { prop: 'status', label: '會員狀態', type: 'status', width: 200 },
+    { prop: 'number', label: '管理員編號', width: 200 },
+    { prop: 'name', label: '管理員名稱' },
+    { prop: 'email', label: '帳號' },
+    { prop: 'authority', label: '管理權限' },
+    { prop: 'status', label: '狀態', type: 'status', width: 200 },
     { prop: 'icon', label: '詳細', type: 'button-detail', width: 100 },
   ]);
 
@@ -21,67 +20,59 @@
 
   const tableData = ref([
     {
-      number: 'US001',
+      number: 'A0001',
       name: '王小明',
-      text: '花媽媽烹飪教室',
       email: 'flower@gmail.com',
-      date: '2025-05-20',
+      authority: '管理員',
     },
     {
-      number: 'US002',
+      number: 'A0002',
       name: '陳小華',
-      text: '花媽媽烹飪教室',
       email: 'flower@gmail.com',
-      date: '2025-05-20',
+      authority: '管理員',
     },
     {
-      number: 'US003',
+      number: 'A0003',
       name: '陳小華',
-      text: '花媽媽烹飪教室',
       email: 'flower@gmail.com',
-      date: '2025-05-20',
+      authority: '管理員',
     },
     {
-      number: 'US004',
+      number: 'A0004',
       name: '陳小華',
-      text: '花媽媽烹飪教室',
       email: 'flower@gmail.com',
-      date: '2025-05-20',
+      authority: '管理員',
     },
     {
-      number: 'US005',
+      number: 'A0005',
       name: '陳小華',
-      text: '花媽媽烹飪教室',
       email: 'flower@gmail.com',
-      date: '2025-05-20',
+      authority: '管理員',
     },
     {
-      number: 'US006',
+      number: 'A0006',
       name: '陳小華',
-      text: '花媽媽烹飪教室',
       email: 'flower@gmail.com',
-      date: '2025-05-20',
+      authority: '管理員',
     },
     {
-      number: 'US007',
+      number: 'A0007',
       name: '陳小華',
-      text: '花媽媽烹飪教室',
       email: 'flower@gmail.com',
-      date: '2025-05-20',
+      authority: '管理員',
     },
     {
-      number: 'US008',
+      number: 'A0008',
       name: '陳小華',
-      text: '花媽媽烹飪教室',
       email: 'flower@gmail.com',
-      date: '2025-05-20',
+      authority: '管理員',
     },
   ]);
 </script>
 
 <template>
   <TheHeader
-    title="會員管理"
+    title="權限管理"
     :dropOptions="categoryOptions"
   />
   <table_el

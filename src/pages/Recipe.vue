@@ -39,14 +39,14 @@
   //內容
 
   const columns = ref([
-    { prop: 'number', label: '食譜編號', width: 100 },
-    { prop: 'category', label: '食譜分類', width: 100 },
+    { prop: 'number', label: '食譜編號', width: 200 },
+    { prop: 'category', label: '食譜分類', width: 150 },
     { prop: 'name', label: '食譜名稱' },
     { prop: 'author', label: '作者' },
-    { prop: 'date', label: '新增日期' },
-    { prop: 'status', label: '會員狀態', type: 'status' },
-    { prop: 'icon', label: '詳細', type: 'button-detail', width: 60 },
-    { prop: 'del', label: '刪除', type: 'button-del', width: 60 },
+    { prop: 'date', label: '新增日期', width: 200 },
+    { prop: 'status', label: '會員狀態', type: 'status', width: 200 },
+    { prop: 'icon', label: '詳細', type: 'button-detail', width: 100 },
+    { prop: 'del', label: '刪除', type: 'button-del', width: 100 },
   ]);
 
   const tableData = ref([
@@ -74,7 +74,7 @@
       number: 'R01',
       category: '一人料理',
       name: '柚子胡椒雞肉蕎麥麵',
-      author: '平台發布',
+      author: '管理員',
       date: '2025-07-07',
       status: '已發布',
       icon: '',
@@ -104,7 +104,12 @@
         :table-data="tableData"
         :columns="columns"
       >
-        <template #del><Icon class="del-button" icon-name="del" /></template>
+        <template #del>
+          <Icon
+            class="del-button"
+            icon-name="del"
+          />
+        </template>
       </Table>
     </div>
   </div>
@@ -147,11 +152,11 @@
 
     .recipe-board__contents {
       margin-top: 50px;
-      
-      .del-button{
-          font-size: 20px;
-          cursor: pointer;
-        }
+
+      .del-button {
+        font-size: 20px;
+        cursor: pointer;
+      }
     }
   }
 </style>

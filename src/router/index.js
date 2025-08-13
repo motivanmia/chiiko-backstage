@@ -13,12 +13,15 @@ const router = createRouter({
       path: '/',
       name: 'index',
       component: () => import('@/pages/Index.vue'),
-
       children: [
         {
-          path: '/home',
-          name: 'home',
-          component: () => import('@/pages/Home.vue'),
+          path: '',
+          redirect: '/admin',
+        },
+        {
+          path: '/admin',
+          name: 'admin',
+          component: () => import('@/pages/Admin.vue'),
         },
         {
           path: '/recipe',
@@ -41,21 +44,6 @@ const router = createRouter({
           component: () => import('@/pages/OrderDetail.vue'),
         },
         {
-          path: '/Report-Management',
-          name: 'Report-Management',
-          component: () => import('@/pages/ReportManagement.vue'),
-        },
-        {
-          path: '/Recipe-DetailAdmin',
-          name: 'RecipeDetailAdmin',
-          component: () => import('@/pages/RecipeDetailAdmin.vue'),
-        },
-        {
-          path: '/Notification-Management',
-          name: 'Notification-Management',
-          component: () => import('@/pages/NotificationManagement.vue'),
-        },
-        {
           path: '/ingredient',
           name: 'ingredient',
           component: () => import('@/pages/Ingredient.vue'),
@@ -70,6 +58,11 @@ const router = createRouter({
           path: '/product',
           name: 'product',
           component: () => import('@/pages/Product.vue'),
+        },
+        {
+          path: '/report',
+          name: 'Report-Management',
+          component: () => import('@/pages/ReportManagement.vue'),
         },
       ],
     },

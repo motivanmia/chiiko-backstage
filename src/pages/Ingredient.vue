@@ -64,13 +64,13 @@
 
   // 表格欄位
   const columns = ref([
-    { prop: 'number', label: '食材編號', width: 140 },
-    { prop: 'category', label: '食材分類', width: 140 },
-    { prop: 'name', label: '食材名稱', width: 200 },
+    { prop: 'number', label: '食材編號', width: 200 },
+    { prop: 'category', label: '食材分類', width: 250 },
+    { prop: 'name', label: '食材名稱' },
     { prop: 'img', label: '食材圖片', type: 'image' },
-    { prop: 'status', label: '狀態', type: 'status', width: 140 },
-    { prop: 'icon', label: '詳細', type: 'button-detail', width: 60 },
-    { prop: 'del', label: '刪除', type: 'button-del', width: 60 },
+    { prop: 'status', label: '狀態', type: 'status', width: 200 },
+    { prop: 'icon', label: '詳細', type: 'button-detail', width: 100 },
+    { prop: 'del', label: '刪除', type: 'button-del', width: 100 },
   ]);
 </script>
 
