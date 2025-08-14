@@ -83,6 +83,10 @@
   <TheHeader
     title="會員管理"
     :dropOptions="categoryOptions"
+    v-model:searchOption="searchOption"
+    v-model:searchText="searchText"
+    :show-increase-button="false"
+    
   />
   <table_el
     :table-data="tableData"
