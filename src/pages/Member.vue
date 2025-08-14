@@ -120,7 +120,6 @@
           v-if="currentRow"
           class="modal-body"
         >
-          <div>頭像</div>
           <div class="row">
             會員編號：
             <span>{{ currentRow.number }}</span>
