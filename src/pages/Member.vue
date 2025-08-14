@@ -13,7 +13,7 @@
     { prop: 'icon', label: '詳細', type: 'button-detail', width: 60 },
   ]);
 
-    const categoryOptions = [
+  const categoryOptions = [
     { label: '全部', value: 'all' },
     { label: '正常', value: 'Active' },
     { label: '停權', value: 'Disabled' },
@@ -82,7 +82,11 @@
 <template>
   <TheHeader
     title="會員管理"
-    :dropOptions="categoryOptions"/>
+    :dropOptions="categoryOptions"
+    v-model:searchOption="searchOption"
+    v-model:searchText="searchText"
+    :showIncreaseButton="false"
+  />
   <table_el
     :table-data="tableData"
     :columns="columns"
