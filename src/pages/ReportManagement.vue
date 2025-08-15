@@ -1,30 +1,19 @@
 <template>
   <div class="page-container">
-    <div class="recipe-board">
-      <div class="recipe-board__manage">
-        <MyTitle title="留言檢舉管理"></MyTitle>
-      </div>
+    <TheHeader
+      title="留言檢舉管理"
+      :dropOptions="reportStatusOptions"
+      :showIncreaseButton="false"
+      v-model:searchOption="selectedStatus"
+      v-model:searchText="searchText"
+    />
 
-      <div class="recipe-board__query">
-        <DropMenu
-          v-model="selectedStatus"
-          :options="reportStatusOptions"
-          class="recipe-board__drop"
-          placeholder="請選擇處理狀況"
-        ></DropMenu>
-        <Search class="recipe-board__search" />
-      </div>
-    </div>
+    <Table
+      :table-data="filteredTableData"
+      :columns="columns"
+      @button-click="handleDetailClick"
+    />
 
-    <div class="recipe-board__contents">
-      <Table
-        :table-data="tableData"
-        :columns="columns"
-        @button-click="handleDetailClick"
-      ></Table>
-    </div>
-
-    <!-- ✨ 修改點 1：將元件標籤改為 DetailModal -->
     <DetailModal
       :show="isModalVisible"
       :type="'report'"
@@ -38,37 +27,61 @@
 
 <script setup>
   import 'element-plus/theme-chalk/el-cascader.css';
-  import { ref } from 'vue';
-  import DropMenu from '@/components/common/DropMenu.vue';
-  import Search from '@/components/common/Search.vue';
-  import MyTitle from '@/components/common/Title.vue';
+  import { ref, computed } from 'vue';
+  import TheHeader from '@/components/common/TheHeader.vue';
   import Table from '@/components/Table.vue';
   import DetailModal from '@/components/DetailModal.vue';
 
-  // --- 燈箱狀態控制 ---
   const isModalVisible = ref(false);
   const selectedReport = ref(null);
 
-  // --- 您原有的 Script 內容 ---
-  const selectedStatus = ref('');
+  const selectedStatus = ref('all');
+  const searchText = ref('');
+
+  const filteredTableData = computed(() => {
+    let filteredItems = [...tableData.value];
+
+    if (selectedStatus.value && selectedStatus.value !== 'all') {
+      const selectedLabel = reportStatusOptions.value.find(
+        (option) => option.value === selectedStatus.value,
+      )?.label;
+
+      if (selectedLabel) {
+        filteredItems = filteredItems.filter((item) => item.status === selectedLabel);
+      }
+    }
+
+    if (searchText.value.trim() !== '') {
+      const lowerCaseSearchText = searchText.value.toLowerCase();
+      filteredItems = filteredItems.filter(
+        (item) =>
+          item.number.toLowerCase().includes(lowerCaseSearchText) ||
+          item.reporter_id.toLowerCase().includes(lowerCaseSearchText) ||
+          item.offender_id.toLowerCase().includes(lowerCaseSearchText) ||
+          item.comment_content.toLowerCase().includes(lowerCaseSearchText),
+      );
+    }
+
+    return filteredItems;
+  });
+
   const reportStatusOptions = ref([
+    { value: 'all', label: '全部狀態' },
     { value: 'pending', label: '待處理' },
     { value: 'in_progress', label: '處理中' },
     { value: 'resolved', label: '已解決' },
     { value: 'rejected', label: '不成立' },
   ]);
 
-  const searchText = ref('');
-
   const columns = ref([
-    { prop: 'number', label: '案件編號' },
+    { prop: 'number', label: '案件編號', width: 200 },
     { prop: 'report_date', label: '檢舉日期' },
     { prop: 'reporter_id', label: '檢舉會員編號' },
     { prop: 'report_category', label: '檢舉類型' },
     { prop: 'offender_id', label: '留言會員編號' },
-    { prop: 'comment_content', label: '留言內容', width: 0 },
-    { prop: 'status', label: '處理狀況' },
-    { prop: 'actions', label: '詳細', type: 'button-detail', width: 90 },
+    { prop: 'comment_content', label: '留言內容' },
+    { prop: 'status', label: '處理狀況', width: 200 },
+    { prop: 'actions', label: '詳細', type: 'button-detail', width: 100 },
   ]);
 
   const tableData = ref([
@@ -119,7 +132,6 @@
     },
   ]);
 
-  // --- 事件處理函式 ---
   function handleDetailClick(rowData) {
     selectedReport.value = rowData;
     isModalVisible.value = true;
@@ -137,46 +149,4 @@
   }
 </script>
 
-<style lang="scss" scoped>
-  .page-container {
-    padding: 2rem;
-  }
-  .recipe-board {
-    &__manage {
-      display: flex;
-      justify-content: space-between;
-      align-items: center; /* 使用 align-items 更適合單行 flex 佈局 */
-    }
-
-    /* ✨ 關鍵修正點：從這裡開始 */
-    &__query {
-      display: flex; /* 改回使用 Flexbox，因為它對這種兩端對齊的簡單佈局更直觀 */
-      justify-content: space-between; /* 關鍵！將下拉選單和搜尋框推向左右兩側 */
-      align-items: center; /* 讓它們垂直置中 */
-
-      margin-top: 27px;
-      position: relative;
-
-      &::after {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 1px;
-        background-color: #eee;
-        bottom: -30px;
-      }
-
-      /* 
-        我們不再需要 grid-column 的設定了，
-        justify-content: space-between 會自動處理對齊。
-      */
-      // .recipe-board__drop { ... } (移除)
-      // .recipe-board__search { ... } (移除)
-    }
-    /* ✨ 關鍵修正點：結束 */
-
-    &__contents {
-      margin-top: 50px;
-    }
-  }
-</style>
+<style lang="scss" scoped></style>
