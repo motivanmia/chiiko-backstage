@@ -42,7 +42,10 @@
 
         <!-- 狀態開關類型 -->
         <div v-else-if="col.type === 'status'">
-          <switch_el />
+          <switch_el
+            :yes="yes"
+            :no="no"
+          />
         </div>
 
         <!-- 圖片類型 -->
@@ -78,6 +81,12 @@
     columns: {
       type: Array,
       default: () => [],
+    },
+    yes: {
+      type: String,
+    },
+    no: {
+      type: String,
     },
   });
 

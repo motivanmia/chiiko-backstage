@@ -1,7 +1,34 @@
 <script setup>
   import table_el from '@/components/Table.vue';
-  import { ref } from 'vue';
+  import { ref, computed } from 'vue';
   import TheHeader from '@/components/common/TheHeader.vue';
+
+  const searchOption = ref('all');
+  const searchText = ref('');
+
+  const filteredTableData = computed(() => {
+    const rawCat = searchOption.value;
+    // console.log(rawCat);
+
+    const cat = typeof rawCat === 'array' && rawCat !== null ? rawCat.value : String(rawCat || '');
+    // console.log(cat);
+
+    const kw = searchText.value.trim().toLowerCase();
+
+    // 1) 先按分類（就算沒有關鍵字也要先篩）
+    let rows = tableData.value;
+    if (cat && cat !== 'all') {
+      rows = rows.filter((r) => r.category === cat);
+    }
+
+    // 2) 再按關鍵字（這裡示範只搜名稱，要搜更多欄位就加）
+    if (!kw) return rows;
+    return rows.filter((r) => {
+      const nameHit = String(r.name).toLowerCase().includes(kw);
+      const numberHit = String(r.number).toLowerCase().includes(kw);
+      return nameHit || numberHit;
+    });
+  });
 
   const columns = ref([
     { prop: 'number', label: '管理員編號', width: 200 },
@@ -73,10 +100,12 @@
 <template>
   <TheHeader
     title="權限管理"
+    v-model:searchOption="searchOption"
+    v-model:searchText="searchText"
     :dropOptions="categoryOptions"
   />
   <table_el
-    :table-data="tableData"
+    :table-data="filteredTableData"
     :columns="columns"
   />
 </template>
