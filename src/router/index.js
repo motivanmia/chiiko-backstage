@@ -15,8 +15,10 @@ const router = createRouter({
       component: () => import('@/pages/Index.vue'),
       children: [
         {
-          path: '',
-          redirect: '/admin',
+          path: '/',
+          redirect: {
+            name: 'admin',
+          },
         },
         {
           path: '/admin',
