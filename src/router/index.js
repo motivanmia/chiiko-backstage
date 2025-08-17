@@ -60,9 +60,10 @@ const router = createRouter({
           component: () => import('@/pages/Product.vue'),
         },
         {
-          path: '/report',
-          name: 'Report-Management',
-          component: () => import('@/pages/ReportManagement.vue'),
+          path: '/product/:id',
+          name: 'ProductDetail',
+          component: () => import('@/pages/ProductDetail.vue'),
+          props: true,
         },
       ],
     },
