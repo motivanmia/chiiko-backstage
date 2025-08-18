@@ -11,10 +11,6 @@
       type: [String, Array],
       default: '',
     },
-    cascaderProps: {
-      type: Object,
-      default: () => ({}),
-    },
   });
 
   const emits = defineEmits(['update:modelValue', 'change']);
@@ -30,7 +26,6 @@
     <el-cascader
       :model-value="modelValue"
       :options="options"
-      :props="cascaderProps"
       placeholder="請選擇"
       @change="handleChange"
     ></el-cascader>
