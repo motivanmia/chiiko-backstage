@@ -67,6 +67,12 @@ const router = createRouter({
           component: () => import('@/pages/ProductDetail.vue'),
           props: true,
         },
+        {
+          path: '/report',
+          name: 'ReportManagement',
+          component: () => import('@/pages/ReportManagement.vue'),
+          props: true,
+        },
       ],
     },
     {
