@@ -1,3 +1,40 @@
+<script setup>
+  import Icon from '@/components/common/Icon.vue';
+  import switch_el from '@/components/Switch.vue';
+
+  defineProps({
+    tableData: {
+      type: Array,
+      default: () => [],
+    },
+    columns: {
+      type: Array,
+      default: () => [],
+    },
+    yes: {
+      type: String,
+    },
+    no: {
+      type: String,
+    },
+  });
+
+  // ✨ [關鍵] 3. 聲明這個元件會發送一個名為 'button-click' 的事件
+  // 用於將狀態變動的資訊傳給上層父元件
+  const emit = defineEmits(['button-click', 'toggle-status']);
+
+  // ✨ [關鍵] 4. 當預設的圖示按鈕被點擊時，觸發這個函式
+  function handleIconClick(rowData) {
+    // 發送事件，並將該行的完整資料(rowData)作為參數傳出去
+    emit('button-click', rowData);
+  }
+
+  // switch狀態切換函式
+  function handleStatusToggle(rowData, newStatus) {
+    emit('toggle-status', { rowData, newStatus });
+  }
+</script>
+
 <template>
   <el-table
     :data="tableData"
@@ -45,6 +82,8 @@
           <switch_el
             :yes="yes"
             :no="no"
+            :initialStatus="scope.row.status"
+            @toggle="handleStatusToggle(scope.row, $event)"
           />
         </div>
 
@@ -68,37 +107,6 @@
     </el-table-column>
   </el-table>
 </template>
-
-<script setup>
-  import Icon from '@/components/common/Icon.vue';
-  import switch_el from '@/components/Switch.vue';
-
-  defineProps({
-    tableData: {
-      type: Array,
-      default: () => [],
-    },
-    columns: {
-      type: Array,
-      default: () => [],
-    },
-    yes: {
-      type: String,
-    },
-    no: {
-      type: String,
-    },
-  });
-
-  // ✨ [關鍵] 3. 聲明這個元件會發送一個名為 'button-click' 的事件
-  const emit = defineEmits(['button-click']);
-
-  // ✨ [關鍵] 4. 當預設的圖示按鈕被點擊時，觸發這個函式
-  function handleIconClick(rowData) {
-    // 發送事件，並將該行的完整資料(rowData)作為參數傳出去
-    emit('button-click', rowData);
-  }
-</script>
 
 <style lang="scss" scoped>
   .icon {
