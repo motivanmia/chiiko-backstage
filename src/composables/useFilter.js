@@ -5,7 +5,8 @@ export const useFilter = (
   searchOptionRef,
   searchTextRef,
   optionsGenerator,
-  filterKey,
+  firstLevelKey,
+  secLevelKey,
 ) => {
   // 生成下拉選單選項
   const dropOptions = computed(() => {
@@ -20,21 +21,30 @@ export const useFilter = (
     const keyword = searchTextRef.value.trim().toLowerCase();
 
     // 篩選邏輯 判斷是否為多層篩選
-    if (Array.isArray(selected) && selected.length > 0) {
-      // 多層篩選邏輯
+    if (Array.isArray(selected)) {
       if (selected.length === 2) {
-        const statusValue = selected[0];
-        const secValue = selected[1];
-        if (statusValue !== 'all' && filterKey) {
-          result = result.filter(
-            (item) => item.status === statusValue && item[filterKey] === secValue,
-          );
+        // 多層篩選邏輯
+        const mainValue = selected[0];
+        const subValue = selected[1];
+        if (mainValue !== 'all' && firstLevelKey && secLevelKey) {
+          if (Array.isArray(mainValue) && mainValue.length === 2 && mainValue[0] === 'not') {
+            // 不等於第一層的判斷項目
+            const excludedValue = mainValue[1];
+            result = result.filter(
+              (item) => item[firstLevelKey] !== excludedValue && item[secLevelKey] === subValue,
+            );
+          } else {
+            // 等於第一層的判斷項目
+            result = result.filter(
+              (item) => item[firstLevelKey] === mainValue && item[secLevelKey] === subValue,
+            );
+          }
         }
       } else if (selected.length === 1) {
         // 單層篩選邏輯
         const selectedValue = selected[0];
-        if (selectedValue !== 'all') {
-          result = result.filter((item) => item.status === selectedValue);
+        if (selectedValue !== 'all' && firstLevelKey) {
+          result = result.filter((item) => item[firstLevelKey] === selectedValue);
         }
       }
     }
@@ -53,27 +63,44 @@ export const useFilter = (
 // -----定義邏輯(要寫在各自的頁面)
 
 // -----多層選項
-// // 定義選項生成邏輯  name都改成第二層篩選的欄位值
+// // 定義選項生成邏輯
 // const optionsGenerator = (data) => {
-//   const uniqueStatuses = [...new Set(data.map((item) => item.status))];
-//   const options = uniqueStatuses.map((status) => {
-//     const itemsInStatus = data.filter((item) => item.status === status);
-//     const uniqueSub = [...new Set(itemsInStatus.map((item) => item.name))];
-//     const subChildren = uniqueSub.map((name) => ({
-//       label: name,
-//       value: name,
-//     }));
+//   // 定義主選項
+//   const mainOptions = [
+//     { label: '管理員', value: '管理員' },
+//     { label: '會員', value: ['not', '管理員'] },
+//   ];
+
+//   // 為每個主選項生成子選項
+//   const secOptions = mainOptions.map((mainOpt) => {
+//     let subChildren = [];
+
+//     if (mainOpt.value === '管理員') {
+//       // 主選項是admin時 篩選出author為管理員的資料
+//       const adminData = data.filter((item) => item.author === '管理員');
+//       // 依據資料項目生成子選項(狀態)
+//       const uniqueName = [...new Set(adminData.map((item) => item.status))];
+//       subChildren = uniqueName.map((status) => ({
+//         label: status,
+//         value: status,
+//       }));
+//     } else if (mainOpt.value !== '管理員') {
+//       // 主選項是non-admin時 篩選出author不是管理員的資料
+//       const nonAdminData = data.filter((item) => item.author !== '管理員');
+//       // 依據資料項目生成子選項(狀態)
+//       const uniqueName = [...new Set(nonAdminData.map((item) => item.status))];
+//       subChildren = uniqueName.map((status) => ({
+//         label: status,
+//         value: status,
+//       }));
+//     }
 //     return {
-//       label: status === 'Active' ? '正常' : '停權',
-//       value: status,
+//       ...mainOpt,
 //       children: subChildren,
 //     };
 //   });
-//   return options;
+//   return secOptions;
 // };
-
-// // 定義篩選邏輯
-// const filterKey = 'name';
 
 // -----單一選項
 //  // 定義選項生成邏輯
@@ -86,5 +113,12 @@ export const useFilter = (
 //     }));
 //   };
 
-//   // 定義篩選邏輯
-//  const filterKey = undefined;
+// // 使用composable生成選項
+// const { dropOptions, filterData } = useFilter(
+//   tableData,
+//   searchOption,
+//   searchText,
+//   optionsGenerator,
+//   'status',    //第一層選單項目
+//   undefined,   //第二層選單項目(單層就undefined)
+// );

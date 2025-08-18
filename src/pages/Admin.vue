@@ -8,7 +8,7 @@
 
   const tableData = ref(initialTableData);
 
-  const searchOption = ref('all');
+  const searchOption = ref([]);
   const searchText = ref('');
 
   // 定義選項生成邏輯
@@ -21,16 +21,14 @@
     }));
   };
 
-  // 定義篩選邏輯
-  const filterKey = undefined;
-
   // 使用composable生成選項
   const { dropOptions, filterData } = useFilter(
     tableData,
     searchOption,
     searchText,
     optionsGenerator,
-    filterKey,
+    'status',
+    undefined,
   );
 
   const handleStatusToggle = ({ rowData, newStatus }) => {
