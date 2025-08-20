@@ -210,4 +210,26 @@
     align-items: center;
     justify-content: center;
   }
+  :deep(.el-button) {
+    border-radius: 6px;
+    padding: 4px 14px;
+    font-size: 13px;
+  }
+
+  :deep(.el-button--primary) {
+    color: color(text, light);
+    background-color: color(button, main);
+    border: none;
+    &:hover {
+      background-color: lighten(color(button, main), 15%);
+    }
+  }
+  :deep(.el-button--danger) {
+    color: color(text, light);
+    background-color: color(button, main);
+    border: none;
+    &:hover {
+      background-color: lighten(color(button, main), 15%);
+    }
+  }
 </style>
