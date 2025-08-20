@@ -1,8 +1,14 @@
-<script setup></script>
+<script setup>
+  import { defineEmits } from 'vue';
+
+  const emit = defineEmits(['click']);
+
+</script>
 
 <template>
   <el-button
     class="increase-button"
+    @click="emit('click')"
     round
   >
     + 新增

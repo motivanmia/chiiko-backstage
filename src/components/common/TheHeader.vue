@@ -4,6 +4,7 @@
   import IncreaseButton from './IncreaseButton.vue';
   import DropMenu from './DropMenu.vue';
   import Search from './Search.vue';
+  import { defineEmits } from 'vue';
 
   const props = defineProps({
     title: {
