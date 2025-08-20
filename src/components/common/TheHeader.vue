@@ -4,6 +4,7 @@
   import IncreaseButton from './IncreaseButton.vue';
   import DropMenu from './DropMenu.vue';
   import Search from './Search.vue';
+  import { defineEmits } from 'vue';
 
   const props = defineProps({
     title: {
@@ -28,7 +29,7 @@
     },
   });
 
-  const emit = defineEmits(['update:searchOption', 'update:searchText']);
+  const emit = defineEmits(['update:searchOption', 'update:searchText', 'add-new']);
 
   const searchOption = computed({
     get: () => props.searchOption,
@@ -53,7 +54,10 @@
         class="the-header__title"
       />
 
-      <IncreaseButton v-if="showIncreaseButton" />
+      <IncreaseButton
+        v-if="showIncreaseButton"
+        @click="emit('add-new')"
+      />
     </div>
     <div class="the-header__wrap">
       <DropMenu
