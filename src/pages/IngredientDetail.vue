@@ -334,7 +334,7 @@
     // 單值欄位
     pick('ingredient_id'); // 一定要帶，用來鎖定更新對象
     pick('name');
-    pick('category_id'); // ⚠ 你的後端欄位是 ingredients_categary_id，下面會轉換
+    pick('category_id');
     pick('status');
     pick('storage_method');
 
@@ -385,7 +385,7 @@
     // console.log(p);
 
     const payloadForApi = {
-      ingredients_categary_id: Number(p.category_id) || 0,
+      ingredients_category_id: Number(p.category_id) || 0,
       name: p.name,
       image: p.images,
       status: String(p.status ?? '0'),
@@ -442,7 +442,7 @@
       // 4) 依後端鍵名轉換並送出
       const patchBody = { ingredient_id: String(cur.ingredient_id) };
       if ('category_id' in rawDiff) {
-        patchBody.ingredients_categary_id = Number(rawDiff.category_id) || 0;
+        patchBody.ingredients_category_id = Number(rawDiff.category_id) || 0;
       }
       if ('name' in rawDiff) patchBody.name = rawDiff.name;
       if ('status' in rawDiff) patchBody.status = String(rawDiff.status ?? '0');
