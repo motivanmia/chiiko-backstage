@@ -463,6 +463,10 @@
       ElMessage.error(e.message || '更新失敗');
     }
   }
+
+  async function onCancel() {
+    router.push({ name: 'ingredient' });
+  }
 </script>
 
 <template>
@@ -472,6 +476,7 @@
         title="食材項目編輯"
         @create="onCreate"
         @save="onSave"
+        @cancel="onCancel"
         :buttons="isNew ? ['create', 'cancel'] : ['save', 'cancel']"
       />
     </div>
