@@ -96,12 +96,20 @@
 
         <!-- 狀態開關類型 -->
         <div v-else-if="col.type === 'status'">
-          <switch_el
-            :yes="yes"
-            :no="no"
-            :initialStatus="scope.row.status"
-            @toggle="handleStatusToggle(scope.row, $event)"
-          />
+          <template v-if="$slots.status">
+            <slot
+              name="status"
+              :row="scope.row"
+            />
+          </template>
+          <template v-else>
+            <switch_el
+              v-model="scope.row[col.prop]"
+              :yes="yes"
+              :no="no"
+              @toggle="(newStatus) => emit('toggle-status', { rowData: scope.row, newStatus })"
+            />
+          </template>
         </div>
 
         <!-- 圖片類型（可上傳/更換/移除） -->

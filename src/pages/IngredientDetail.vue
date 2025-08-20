@@ -89,7 +89,6 @@
     },
     { prop: 'ingredientName', label: '食材名稱', type: 'text-edit', width: 200 },
     { prop: 'ingredientImage', label: '食材圖片', type: 'image' },
-    { prop: 'ingredientStatus', label: '狀態', type: 'status', width: 140 },
   ]);
 
   /** —— 第二張表：挑選指南 —— */
