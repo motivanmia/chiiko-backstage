@@ -67,7 +67,7 @@
     v-model:searchOption="searchOption"
     v-model:searchText="searchText"
     :dropOptions="dropOptions"
-    @add-new="isModalVisible = true"
+    @create="isModalVisible = true"
   />
   <table_el
     yes="正常"
