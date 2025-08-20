@@ -1,59 +1,66 @@
 <script setup>
   import 'element-plus/theme-chalk/el-cascader.css';
-  import { ref, computed } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
   import { useRouter } from 'vue-router';
+  import { ElMessageBox, ElMessage } from 'element-plus';
 
   import Table from '@/components/Table.vue';
   import TheHeader from '@/components/common/TheHeader.vue';
-  import { ingredients } from '@/constants/ingredients.js';
+  import { useIngredientStore } from '@/stores/Ingredient';
+  import { useIngredientCategoryStore } from '@/stores/IngredientCategory';
+  const ingredient = useIngredientStore();
+  const categoryStore = useIngredientCategoryStore();
+
   import switch_el from '@/components/Switch.vue';
+  import Icon from '@/components/common/Icon.vue';
 
-  // 原始資料
-  const tableData = ref(
-    ingredients.map((item) => ({
-      number: item.id,
-      category: item.category, // e.g. 'vegetables' | 'meat'
-      name: item.name,
-      img: item.img?.[0] || '',
-      status: '',
-      icon: '',
-      del: '',
-    })),
-  );
+  const API_BASE = import.meta.env.VITE_API_URL;
+  console.log(API_BASE);
 
-  const router = useRouter();
-  function goToDetail(rowOrPayload) {
-    // 若你的 Table 會回傳 { type, row }，可以這樣分流：
-    const row = rowOrPayload?.row ?? rowOrPayload;
-    // if (rowOrPayload?.type && rowOrPayload.type !== 'icon') return;
-    router.push({ name: 'IngredientDetail', params: { id: row.number } });
+  async function deleteById(id) {
+    const res = await fetch(
+      `${API_BASE}/school/delete_ingredient.php?ingredient_id=${encodeURIComponent(String(id))}`,
+      {
+        method: 'DELETE',
+        headers: { Accept: 'application/json' },
+        // 若後端用 cookie/session 驗證，加上：
+        // credentials: 'include',
+      },
+    );
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json?.status !== 'success') {
+      throw new Error(json?.message || '刪除失敗');
+    }
+    return json;
   }
 
-  const categoryOptions = [
-    { label: '全部', value: 'all' },
-    { label: '植物性食材', value: 'vegetables' },
-    { label: '動物性食材', value: 'meat' },
-  ];
+  onMounted(async () => {
+    await Promise.all([ingredient.loadIngredients(), categoryStore.loadCategories()]);
+  });
 
-  const searchOption = ref('all');
+  const router = useRouter();
+  function goToDetail(row) {
+    // row 來自 tableRows，已經有 number
+    router.push({ name: 'IngredientDetail', params: { id: row.number } });
+  }
+  function goCreate() {
+    router.push({ name: 'IngredientDetail', params: { id: 'new' } });
+  }
+  const categoryOptions = computed(() => [
+    { label: '全部', value: 'all' },
+    ...categoryStore.selectOptions,
+  ]);
+
+  const searchOption = ref('all'); // 存 category key：'all' | 'vegetables' | 'meat'
   const searchText = ref('');
 
   const filteredTableData = computed(() => {
-    const rawCat = searchOption.value;
-    // console.log(rawCat);
-
-    const cat = typeof rawCat === 'array' && rawCat !== null ? rawCat.value : String(rawCat || '');
-    // console.log(cat);
-
+    const cat = String(searchOption.value || 'all');
     const kw = searchText.value.trim().toLowerCase();
 
-    // 1) 先按分類（就算沒有關鍵字也要先篩）
-    let rows = tableData.value;
-    if (cat && cat !== 'all') {
-      rows = rows.filter((r) => r.category === cat);
-    }
+    let rows = ingredient.tableRows; // ← 用 store
+    if (cat !== 'all') rows = rows.filter((r) => r.category === cat);
 
-    // 2) 再按關鍵字（這裡示範只搜名稱，要搜更多欄位就加）
     if (!kw) return rows;
     return rows.filter((r) => {
       const nameHit = String(r.name).toLowerCase().includes(kw);
@@ -69,9 +76,31 @@
     { prop: 'name', label: '食材名稱' },
     { prop: 'img', label: '食材圖片', type: 'image' },
     { prop: 'status', label: '狀態', type: 'status', width: 200 },
-    { prop: 'icon', label: '詳細', type: 'button-detail', width: 100 },
+    { prop: 'icon', label: '詳細', type: 'button-edit', width: 100 },
     { prop: 'del', label: '刪除', type: 'button-del', width: 100 },
   ]);
+
+  let deleting = false;
+
+  async function onDelete(row) {
+    if (deleting) return;
+    const id = row.number; // 或 row.id，看你後端的主鍵
+
+    // 瀏覽器內建確認框
+    const ok = window.confirm(`確認刪除編號「${id}」的食材？`);
+    if (!ok) return;
+
+    deleting = true;
+    try {
+      await deleteById(id); // 打後端 DELETE
+      await ingredient.loadIngredients(); // 重新載入列表資料
+      window.alert('刪除成功'); // 成功提示
+    } catch (err) {
+      window.alert(err?.message || '刪除失敗'); // 失敗提示
+    } finally {
+      deleting = false;
+    }
+  }
 </script>
 
 <template>
@@ -81,7 +110,7 @@
       v-model:searchOption="searchOption"
       v-model:searchText="searchText"
       :dropOptions="categoryOptions"
-      :show-increase-button="false"
+      @create="goCreate"
     />
   </div>
 
@@ -89,13 +118,14 @@
     <Table
       :table-data="filteredTableData"
       :columns="columns"
-      @button-click="goToDetail"
+      :loading="ingredient.loading"
+      @edit-click="goToDetail"
+      @del-click="onDelete"
+      yes="顯示"
+      no="隱藏"
     >
       <template #status>
-        <switch_el
-          yes="顯示"
-          no="隱藏"
-        />
+        <switch_el />
       </template>
       <template #del>
         <Icon
@@ -104,6 +134,13 @@
         />
       </template>
     </Table>
+
+    <p
+      v-if="ingredient.error"
+      class="error"
+    >
+      {{ ingredient.error }}
+    </p>
   </div>
 </template>
 

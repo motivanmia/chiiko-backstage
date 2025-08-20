@@ -2,25 +2,38 @@
   import Title from './Title.vue';
   import TheButton from './TheButton.vue';
 
-  defineProps({
-    title: {
-      type: String,
-      default: '請帶標題',
+  const props = defineProps({
+    title: { type: String, default: '請帶標題' },
+    buttons: {
+      type: Array,
+      default: () => ['save', 'cancel'],
     },
   });
+  const emit = defineEmits(['save', 'create', 'cancel']);
 </script>
 
 <template>
   <div class="the-detail-header__wrap">
     <Title
-      title="訂單管理"
+      :title="title"
       class="the-detail-header__title"
     />
     <div class="the-detail-header__button-wrap">
-      <TheButton />
       <TheButton
+        v-if="buttons.includes('save')"
+        text="儲存"
+        @click="emit('save')"
+      />
+      <TheButton
+        v-if="buttons.includes('create')"
+        text="新增"
+        @click="emit('create')"
+      />
+      <TheButton
+        v-if="buttons.includes('cancel')"
         text="取消"
-        type="cancel"
+        variant="cancel"
+        @click="emit('cancel')"
       />
     </div>
   </div>
