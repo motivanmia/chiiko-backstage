@@ -17,17 +17,6 @@
   // 定義要發出的事件
   const emit = defineEmits(['update:modelValue', 'toggle']);
 
-  // 使用響應式狀態來控制switch元件
-  const isStatusActive = ref(props.initialStatus === 'Active');
-
-  // 監聽父元件傳入的initialStatus變化 同步內部狀態
-  watch(
-    () => props.initialStatus,
-    (newStatus) => {
-      isStatusActive.value = newStatus === 'Active';
-    },
-  );
-
   const proxy = computed({
     get: () => (Number(props.modelValue) === 0 ? 0 : 1),
     set: (val) => {
