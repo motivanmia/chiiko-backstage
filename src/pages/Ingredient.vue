@@ -2,7 +2,6 @@
   import 'element-plus/theme-chalk/el-cascader.css';
   import { ref, computed, onMounted } from 'vue';
   import { useRouter } from 'vue-router';
-  import { ElMessageBox, ElMessage } from 'element-plus';
 
   import Table from '@/components/Table.vue';
   import TheHeader from '@/components/common/TheHeader.vue';
@@ -15,7 +14,7 @@
   import Icon from '@/components/common/Icon.vue';
 
   const API_BASE = import.meta.env.VITE_API_URL;
-  console.log(API_BASE);
+  // console.log(API_BASE);
 
   async function deleteById(id) {
     const res = await fetch(
@@ -51,15 +50,18 @@
     ...categoryStore.selectOptions,
   ]);
 
-  const searchOption = ref('all'); // 存 category key：'all' | 'vegetables' | 'meat'
+  const searchOption = ref('all');
   const searchText = ref('');
+  // console.log(selectOptions.value);
 
   const filteredTableData = computed(() => {
     const cat = String(searchOption.value || 'all');
+    // console.log(cat);
+
     const kw = searchText.value.trim().toLowerCase();
 
     let rows = ingredient.tableRows; // ← 用 store
-    if (cat !== 'all') rows = rows.filter((r) => r.category === cat);
+    if (cat !== 'all') rows = rows.filter((r) => r.categoryId === cat);
 
     if (!kw) return rows;
     return rows.filter((r) => {

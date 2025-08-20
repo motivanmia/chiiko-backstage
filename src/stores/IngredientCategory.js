@@ -34,7 +34,7 @@ export const useIngredientCategoryStore = defineStore('ingredientCategory', () =
 
   // 下拉選單 options（
   const selectOptions = computed(() => list.value.map((c) => ({ label: c.name, value: c.id })));
-  console.log(selectOptions);
+  // console.log(selectOptions);
 
   // 快速查名稱
   const nameById = (id) => list.value.find((c) => c.id === String(id))?.name ?? '';
