@@ -12,6 +12,7 @@
       validator: (val) => ['save', 'cancel'].includes(val),
     },
   });
+  const emit = defineEmits(['click']);
 
   const cancelButtonStyle = computed(() => {
     return { 'the-button--cancel': props.type === 'cancel' };
@@ -22,6 +23,7 @@
   <button
     class="the-button"
     :class="cancelButtonStyle"
+    @click="$emit('click')"
   >
     {{ text }}
   </button>

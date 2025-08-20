@@ -28,7 +28,7 @@
     },
   });
 
-  const emit = defineEmits(['update:searchOption', 'update:searchText']);
+  const emit = defineEmits(['update:searchOption', 'update:searchText', 'create']);
 
   const searchOption = computed({
     get: () => props.searchOption,
@@ -53,7 +53,10 @@
         class="the-header__title"
       />
 
-      <IncreaseButton v-if="showIncreaseButton" />
+      <IncreaseButton
+        v-if="showIncreaseButton"
+        @click="$emit('create')"
+      />
     </div>
     <div class="the-header__wrap">
       <DropMenu
