@@ -1,7 +1,7 @@
 <script setup>
   import 'element-plus/theme-chalk/el-cascader.css';
   import { ref, onMounted, computed } from 'vue';
-  import { useRoute } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
 
   import Table from '@/components/Table.vue';
   import TheDetailHeader from '@/components/common/TheDetailHeader.vue';
@@ -9,6 +9,8 @@
   import { useIngredientCategoryStore } from '@/stores/IngredientCategory';
 
   const route = useRoute();
+  const router = useRouter();
+
   const ingredientStore = useIngredientStore();
   const categoryStore = useIngredientCategoryStore();
   const selectedStatus = ref('');
@@ -409,12 +411,13 @@
 
       // 確定是 JSON 再 parse
       const data = JSON.parse(raw);
-      if (data.status !== 'success') throw new Error(data.message || '儲存失敗');
+      if (data.status !== 'success') throw new Error(data.message || '新增失敗');
 
-      ElMessage.success('已儲存');
+      ElMessage.success('已新增');
+      router.push({ name: 'ingredient' });
     } catch (e) {
       console.error(e);
-      ElMessage.error(e.message || '儲存失敗');
+      ElMessage.error(e.message || '新增失敗');
     }
   }
   async function onSave() {

@@ -20,7 +20,7 @@ export const useIngredientCategoryStore = defineStore('ingredientCategory', () =
       const rows = Array.isArray(json?.data) ? json.data : [];
 
       list.value = rows.map((r) => ({
-        id: String(r.ingredient_categary_id ?? r.id ?? ''),
+        id: String(r.ingredient_category_id ?? r.id ?? ''),
         name: r.name ?? '',
         image: r.image ?? '',
       }));
@@ -34,6 +34,7 @@ export const useIngredientCategoryStore = defineStore('ingredientCategory', () =
 
   // 下拉選單 options（
   const selectOptions = computed(() => list.value.map((c) => ({ label: c.name, value: c.id })));
+  console.log(selectOptions);
 
   // 快速查名稱
   const nameById = (id) => list.value.find((c) => c.id === String(id))?.name ?? '';
