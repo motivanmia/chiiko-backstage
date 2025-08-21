@@ -66,6 +66,13 @@
     { prop: 'icon', label: '編輯', type: 'button-detail', width: 60 },
     { prop: 'del', label: '刪除', type: 'button-del', width: 60 },
   ]);
+
+  // const goToDetail = () => {
+  //   router.push({ name: 'ProductDetail' });
+  // };
+  const goToDetail = () => {
+    router.push({ name: 'ProductDetail', params: { id: 'new' } });
+  };
 </script>
 
 <template>
@@ -76,6 +83,7 @@
       v-model:searchText="searchText"
       :dropOptions="categoryOptions"
       :show-increase-button="true"
+      @increase-click="goToDetail"
     />
   </div>
 

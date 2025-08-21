@@ -1,5 +1,9 @@
 <script>
   import { createRouter, createWebHistory } from 'vue-router';
+  import { useRoute } from 'vue-router';
+
+  const route = useRoute();
+  const isCreate = route.name === 'ProductCreate';
 
   const routes = [
     // 其他路由...
@@ -14,14 +18,12 @@
     history: createWebHistory(),
     routes,
   });
-
-  export default router;
 </script>
 
 <template>
   <div>
-    <h1>商品詳情頁</h1>
-    <p>商品 ID: {{ id }}</p>
+    <h1>這是 ProductDetail 頁面</h1>
+    <p>id: {{ $route.params.id }}</p>
   </div>
 </template>
 
