@@ -502,6 +502,7 @@
       :table-data="ingredientGuideData"
       :columns="ingredientGuideColumns"
       :span-method="spanMethod"
+      :enable-image-upload="true"
     />
   </div>
 </template>
