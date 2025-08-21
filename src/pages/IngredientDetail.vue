@@ -413,7 +413,7 @@
       if (data.status !== 'success') throw new Error(data.message || '新增失敗');
 
       ElMessage.success('已新增');
-      router.push({ name: 'ingredient' });
+      // router.push({ name: 'ingredient' });
     } catch (e) {
       console.error(e);
       ElMessage.error(e.message || '新增失敗');
@@ -493,6 +493,7 @@
     <TheDetailHeader
       title="食材燈箱編輯"
       :buttons="[]"
+      :enable-image-upload="true"
     />
   </div>
 
@@ -501,7 +502,6 @@
       :table-data="ingredientGuideData"
       :columns="ingredientGuideColumns"
       :span-method="spanMethod"
-      :enable-image-upload="true"
     />
   </div>
 </template>
