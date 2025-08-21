@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-const apiBase = import.meta.env.VITE_API_URL;
+const apiBase = import.meta.env.VITE_API_BASE;
 
 //  ID 對中文名
 const categoryIdToLabel = {

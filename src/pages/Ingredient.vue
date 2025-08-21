@@ -13,7 +13,7 @@
   import switch_el from '@/components/Switch.vue';
   import Icon from '@/components/common/Icon.vue';
 
-  const API_BASE = import.meta.env.VITE_API_URL;
+  const API_BASE = import.meta.env.VITE_API_BASE;
   // console.log(API_BASE);
 
   async function deleteById(id) {

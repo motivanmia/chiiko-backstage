@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 
-const apiBase = import.meta.env.VITE_API_URL;
+const apiBase = import.meta.env.VITE_API_BASE;
 
 export const useIngredientCategoryStore = defineStore('ingredientCategory', () => {
   const list = ref([]); // [{ id, name, image }]

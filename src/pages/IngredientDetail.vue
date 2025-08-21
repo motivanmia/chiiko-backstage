@@ -286,7 +286,7 @@
     needUpload.forEach(({ file }) => form.append('files[]', file));
 
     // 讓瀏覽器自動帶 boundary
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/school/upload_image.php`, {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE}/school/upload_image.php`, {
       method: 'POST',
       body: form,
     });
@@ -396,7 +396,7 @@
     console.log(p);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/school/post_ingredient.php`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE}/school/post_ingredient.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payloadForApi),
@@ -452,7 +452,7 @@
       if ('images' in rawDiff) patchBody.image = rawDiff.images; // 後端期望 image
       if ('content' in rawDiff) patchBody.content = rawDiff.content; // 有變才帶
 
-      const url = `${import.meta.env.VITE_API_URL}/school/patch_ingredient.php`;
+      const url = `${import.meta.env.VITE_API_BASE}/school/patch_ingredient.php`;
       await requestPatch(url, patchBody);
 
       // 5) 成功後更新快照
