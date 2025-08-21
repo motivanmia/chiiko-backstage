@@ -10,6 +10,7 @@
   const password = ref('');
   const name = ref('');
   const passwordConfirm = ref('');
+  const role = ref('管理員');
 
   const signup = async () => {
     // 密碼確認
@@ -23,7 +24,7 @@
       name: name.value,
       account: account.value,
       password: password.value,
-      isAdmin: true, // 假設這是新增管理員的標記
+      role: role.value,
     };
 
     try {
@@ -78,6 +79,12 @@
             label="確認密碼"
             type="password"
             placeholder="請再次輸入密碼"
+          />
+          <InputField
+            label="管理權限"
+            :model-value="role"
+            disabled
+            type="text"
           />
 
           <div class="modal-footer">
