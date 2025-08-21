@@ -15,8 +15,8 @@
     await authStore.checkSession();
   });
 
-  const menuItems = [
-    { index: '/admin', title: '後台人員管理' },
+  const all_MenuItems = [
+    { index: '/admin', title: '後台人員管理', role:0 },
     { index: '/member', title: '會員資料查詢' },
     { index: '/recipe', title: '食譜管理' },
     { index: '/ingredient', title: '食材學堂管理' },
@@ -24,6 +24,23 @@
     { index: '/order', title: '訂單查詢' },
     { index: '/report', title: '留言檢舉管理' },
   ];
+
+  const menuItems = computed(() => {
+  // 如果使用者未登入或沒有角色，則不顯示任何項目
+  if (!authStore.isLogin || authStore.user?.role === undefined) {
+    return [];
+  }
+  
+  // 根據使用者的角色過濾選單
+  return all_MenuItems.filter(item => {
+    // 如果項目沒有設定權限（role），則所有登入使用者都可以看見
+    if (item.role === undefined) {
+      return true;
+    }
+    // 如果項目有設定權限，則只允許符合權限的使用者看見
+    return item.role === authStore.user.role;
+  });
+});
 
   const activeMenu = computed(() => {
     const path = route.path;
