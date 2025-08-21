@@ -2,46 +2,45 @@
   import logo from '@/assets/image/logo.svg';
   import InputField from '@/components/login/InputField.vue';
   import { ref } from 'vue';
-
   import { useRouter } from 'vue-router';
+  import { useAuthStore } from '@/stores/Auth';
+
   const router = useRouter();
+  const authStore = useAuthStore();
 
-  // const emit = defineEmits(['close', 'login-success']);
-
-  // 假帳號密碼
-  const FAKE_ACCOUNT = 'test123';
-  const FAKE_PASSWORD = 'test123';
+  const emit = defineEmits(['close', 'login-success']);
 
   const account = ref('');
   const password = ref('');
+  const formError = ref('');
+  const isError = ref(false); // 判斷是否為錯誤訊息，用來切換樣式
 
-  // 控制 toast 顯示
-  const showSuccess = ref(false);
+  const login = async () => {
+    formError.value = '';
+    isError.value = false;
 
-  const noSuccess = ref(false);
+    const result = await authStore.login(account.value, password.value);
 
-  // 範例 login 函式：驗證是否與假帳密吻合
-  const login = () => {
-    //清空提示
-    showSuccess.value = false;
-    noSuccess.value = false;
+    if (result.success) {
+      // 登入成功
+      formError.value = result.message;
+      isError.value = false;
 
-    if (account.value === FAKE_ACCOUNT && password.value === FAKE_PASSWORD) {
-      showSuccess.value = true;
+      // 💡 透過 Pinia 的狀態來判斷是否導向
+      // if (authStore.isLogin) {
+      //   router.push('/');
+      // }
 
-      // ✅ 儲存登入者資料
-      const user = { name: '黃維尼' };
-      localStorage.setItem('user', JSON.stringify(user));
-
+      // 你也可以直接在這裡導向，因為 login 成功就會更新 isLogin
       setTimeout(() => {
-        showSuccess.value = false;
         router.push('/');
+        emit('login-success');
       }, 1000);
     } else {
-      noSuccess.value = true;
-      setTimeout(() => {
-        noSuccess.value = false;
-      }, 2000);
+      // 登入失敗
+      formError.value = result.message;
+      isError.value = true;
+      
     }
   };
 </script>
@@ -90,21 +89,15 @@
       <br />
       © 2025 Chiiko. All rights reserved.
     </div>
-    <transition name="fade">
-      <div
-        v-if="noSuccess"
-        class="noSuccess"
-      >
-        請輸入正確的帳號密碼！
-      </div>
-    </transition>
 
     <transition name="fade">
       <div
-        v-if="showSuccess"
-        class="showSuccess"
+        v-if="formError"
+        class="toast"
+        :class="{ 'is-error': isError }"
       >
-        登入成功
+        {{ formError }}
+        <!-- 帳號或密碼錯誤！ -->
       </div>
     </transition>
   </div>
@@ -171,23 +164,22 @@
       }
     }
     /* 彈窗樣式 */
-    .noSuccess,
-    .showSuccess {
+    .toast {
       position: fixed;
       top: 110px;
       left: 50%;
       transform: translateX(-50%);
-      background: #ccc;
-      color: color(text, dark);
+      background: color(button, main);
+      color: color(text, light);
       padding: 0.6em 1.2em;
       border-radius: 20px;
       font-size: 20px;
       pointer-events: none;
-      z-index: 1;
+      z-index: 999;
     }
-    .showSuccess {
-      background: color(button, main);
-      color: color(text, light);
+    .is-error {
+      background: #ccc;
+      color: color(text, dark);
     }
 
     /* 淡入淡出動畫 */

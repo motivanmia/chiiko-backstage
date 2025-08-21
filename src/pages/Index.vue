@@ -2,28 +2,23 @@
   import { computed } from 'vue';
   import { ref, onMounted } from 'vue';
   import { useRouter, useRoute } from 'vue-router';
-  import { useAuthGuard } from '@/stores/Auth';
   import logo from '@/assets/image/logo.svg';
 
-  useAuthGuard();
+  import { useAuthStore } from '@/stores/Auth';
 
   const router = useRouter();
   const route = useRoute();
+  const authStore = useAuthStore();
 
-  const user = ref(null);
-
-  onMounted(() => {
-    const data = localStorage.getItem('user');
-    if (data) {
-      user.value = JSON.parse(data);
-    }
+  onMounted(async () => {
+    // 透過 checkSession 函式與後端確認 Session 是否有效
+    await authStore.checkSession();
   });
 
   const menuItems = [
     { index: '/admin', title: '後台人員管理' },
     { index: '/member', title: '會員資料查詢' },
     { index: '/recipe', title: '食譜管理' },
-    // { index: '/Recipe-DetailAdmin', title: '食譜管理' },
     { index: '/ingredient', title: '食材學堂管理' },
     { index: '/product', title: '商品管理' },
     { index: '/order', title: '訂單查詢' },
@@ -43,8 +38,8 @@
     return path;
   });
 
-  function handleLogout() {
-    localStorage.removeItem('user');
+  async function handleLogout() {
+    await authStore.logout();
     router.push('/login'); // ✅ 導回登入頁
   }
 </script>
@@ -87,7 +82,7 @@
         <div class="header">
           <!-- <div class="header-user">黃維尼</div> -->
           <div class="header-user">
-            {{ user?.name || '訪客' }}
+            {{ authStore.user?.name || '訪客' }}
           </div>
           <!-- <button class="header-logout">登出</button>
             -->

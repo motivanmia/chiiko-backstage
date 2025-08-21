@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/Auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,54 +25,64 @@ const router = createRouter({
           path: '/admin',
           name: 'admin',
           component: () => import('@/pages/Admin.vue'),
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
         {
           path: '/recipe',
           name: 'recipe',
           component: () => import('@/pages/Recipe.vue'),
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
         {
           path: '/member',
           name: 'member',
           component: () => import('@/pages/Member.vue'),
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
         {
           path: '/order',
           name: 'order',
           component: () => import('@/pages/Order.vue'),
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
         {
           path: '/order-detail',
           name: 'order-detail',
           component: () => import('@/pages/OrderDetail.vue'),
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
         {
           path: '/ingredient',
           name: 'ingredient',
           component: () => import('@/pages/Ingredient.vue'),
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
         {
           path: '/ingredient/:id',
           name: 'IngredientDetail',
           component: () => import('@/pages/IngredientDetail.vue'),
           props: true,
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
         {
           path: '/product',
           name: 'product',
           component: () => import('@/pages/Product.vue'),
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
         {
           path: '/product/:id',
           name: 'ProductDetail',
           component: () => import('@/pages/ProductDetail.vue'),
           props: true,
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
         {
           path: '/report',
           name: 'ReportManagement',
           component: () => import('@/pages/ReportManagement.vue'),
           props: true,
+          meta: { requiresAuth: true },// 🔑 需要登入
         },
       ],
     },
@@ -86,6 +97,29 @@ const router = createRouter({
       component: () => import('@/pages/NotFound.vue'),
     },
   ],
-});
+  
+})
+
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+
+  if (!authStore.isLogin) {
+    await authStore.checkSession();
+  }
+
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+
+  if (requiresAuth && !authStore.isLogin) {
+    //這個頁面需要登入 但若還未登入 直接導到登入頁
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath }, //登入後導回原頁面
+    })
+  } else {
+    next() //這個是固定用法
+  }
+})
+
+
 
 export default router;
