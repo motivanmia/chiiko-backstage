@@ -163,12 +163,6 @@
           @toggle="(v) => updateStatus(row.number, v)"
         />
       </template>
-      <template #del>
-        <Icon
-          class="del-button"
-          icon-name="del"
-        />
-      </template>
     </Table>
 
     <p

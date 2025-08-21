@@ -76,7 +76,7 @@
         </template>
         <!-- 按鈕類型 -->
         <!-- 查看詳細類型 -->
-        <div v-if="col.type === 'button-detail'">
+        <div v-else-if="col.type === 'button-detail'">
           <Icon
             icon-name="detail"
             class="icon"
