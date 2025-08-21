@@ -42,6 +42,7 @@
   });
 });
 
+
   const activeMenu = computed(() => {
     const path = route.path;
 
@@ -64,8 +65,7 @@
 <template>
   <el-container class="layout-container">
     <el-aside>
-      <router-link
-        to="/"
+      <div
         class="logo__link"
       >
         <div class="logo__container">
@@ -78,7 +78,7 @@
           </div>
           <h2 class="logo__title">後台管理系統</h2>
         </div>
-      </router-link>
+      </div>
       <el-menu
         :default-active="activeMenu"
         router
@@ -200,6 +200,7 @@
   .logo {
     &__link {
       text-decoration: none;
+      cursor: auto;
     }
 
     &__container {

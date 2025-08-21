@@ -32,10 +32,18 @@
       // }
 
       // 你也可以直接在這裡導向，因為 login 成功就會更新 isLogin
-      setTimeout(() => {
+      if (authStore.user?.role === 0){
+        setTimeout(() => {
         router.push('/');
         emit('login-success');
-      }, 1000);
+        }, 1000);
+      } else {
+        setTimeout(()=> {
+          router.push('/member');
+          emit('login-success')
+        }, 1000)
+      }
+      
     } else {
       // 登入失敗
       formError.value = result.message;
