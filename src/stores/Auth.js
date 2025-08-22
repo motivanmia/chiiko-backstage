@@ -65,7 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     try {
-      const API_URL = `${apiBase}users/admin_logout.php`; // 💡 假設你有一個登出 API
+      const API_URL = `${apiBase}/users/admin_logout.php`;
       await axios.get(API_URL, {
         withCredentials: true,
       });

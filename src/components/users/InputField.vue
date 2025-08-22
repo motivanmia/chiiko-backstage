@@ -5,6 +5,10 @@
     modelValue: String,
     label: String,
     placeholder: String,
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
     type: {
       type: String,
       default: 'email',
@@ -51,6 +55,7 @@
       :autocomplete="autocomplete"
       :value="modelValue"
       @input="onInput"
+      :disabled="disabled"
       class="input-box"
     />
   </div>

@@ -93,10 +93,10 @@
 
   /** —— 第二張表：挑選指南 —— */
   const ingredientGuideColumns = ref([
-    { prop: 'goodText', label: '左側說明項目', type: 'text-edit', width: 400 },
+    { prop: 'goodText', label: '左側說明項目', type: 'text-edit' },
     { prop: 'comparisonImage', label: '圖片', type: 'image' },
-    { prop: 'badText', label: '右側說明項目', type: 'text-edit', width: 400 },
-    { prop: 'preservationText', label: '保存方法', type: 'text-edit', width: 600 },
+    { prop: 'badText', label: '右側說明項目', type: 'text-edit' },
+    { prop: 'preservationText', label: '保存方法', type: 'text-edit' },
   ]);
 
   // 第一個表格的資料
@@ -413,7 +413,7 @@
       if (data.status !== 'success') throw new Error(data.message || '新增失敗');
 
       ElMessage.success('已新增');
-      router.push({ name: 'ingredient' });
+      // router.push({ name: 'ingredient' });
     } catch (e) {
       console.error(e);
       ElMessage.error(e.message || '新增失敗');
@@ -493,6 +493,7 @@
     <TheDetailHeader
       title="食材燈箱編輯"
       :buttons="[]"
+      :enable-image-tip="true"
     />
   </div>
 
