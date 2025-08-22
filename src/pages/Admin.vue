@@ -47,7 +47,7 @@
           return {
             ...item, // 複製所有原始屬性
             role: roleToText(item.role), // 將 role 數字轉換為中文
-            status: item.status === 0 ? true : false,
+            // status: item.status === 0 ? true : false,
           };
         });
         // ✅ 成功取得資料後，更新 tableData
@@ -90,10 +90,29 @@
     undefined,
   );
 
-  const handleStatusToggle = ({ rowData, newStatus }) => {
+  const handleStatusToggle = async ({ rowData, newStatus }) => {
     const item = tableData.value.find((item) => item.manager_id === rowData.manager_id);
+    const originalStatus = item.status;
     if (item) {
       item.status = newStatus;
+    }
+
+    try {
+      const API_URL = `${apiBase}/update_admin_status.php`; // 
+      await axios.post(
+        API_URL,
+        {
+          manager_id: item.manager_id,
+          status: newStatus, // 💡 直接傳遞數字
+        },
+        { withCredentials: true },
+      );
+      handleMessage('狀態更新成功！');
+    } catch (error) {
+      console.error('Failed to update admin status:', error);
+      handleMessage('伺服器錯誤，無法更新狀態。');
+      // 錯誤時，將狀態回滾
+      if (item) item.status = originalStatus;
     }
   };
 
