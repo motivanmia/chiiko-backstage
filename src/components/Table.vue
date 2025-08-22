@@ -23,6 +23,10 @@
       type: Boolean,
       default: false,
     },
+    currentUserId: {
+      type: [Number, String], // 確保型別可以匹配
+      required: null,
+    },
   });
 
   // ✨ [關鍵] 3. 聲明這個元件會發送一個名為 'button-click' 的事件
@@ -96,11 +100,8 @@
 
         <!-- 狀態開關類型 -->
         <div v-else-if="col.type === 'status'">
-          <template v-if="$slots.status">
-            <slot
-              name="status"
-              :row="scope.row"
-            />
+          <template v-if="scope.row.role === '超級管理員' && scope.row.manager_id == currentUserId">
+            <span>{{ scope.row.status === 0 ? '正常' : '停權' }}</span>
           </template>
           <template v-else>
             <switch_el
