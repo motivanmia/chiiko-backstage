@@ -39,7 +39,7 @@
   // ✅ 建立非同步函式來發送 API 請求
   const fetchAdminData = async () => {
     try {
-      const API_URL = `${apiBase}admin_list.php`;
+      const API_URL = `${apiBase}/admin_list.php`;
       const response = await axios.get(API_URL, { withCredentials: true });
 
       if (response.data.success) {
