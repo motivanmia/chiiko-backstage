@@ -18,7 +18,7 @@
   const login = async () => {
     formError.value = '';
     isError.value = false;
-
+    
     const result = await authStore.login(account.value, password.value);
 
     if (result.success) {

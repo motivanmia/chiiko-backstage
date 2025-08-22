@@ -42,7 +42,7 @@
       const API_URL = `${apiBase}/admin_list.php`;
       const response = await axios.get(API_URL, { withCredentials: true });
 
-      if (response.data.success) {
+      if (response.data.status === 'success') {
         const processedData = response.data.data.map((item) => {
           return {
             ...item, // 複製所有原始屬性
@@ -98,8 +98,9 @@
     }
 
     try {
-      const API_URL = `${apiBase}/update_admin_status.php`; // 
-      await axios.post(
+      const API_URL = `${apiBase}/update_admin_status.php`; //
+
+      const response = await axios.post(
         API_URL,
         {
           manager_id: item.manager_id,
@@ -107,12 +108,21 @@
         },
         { withCredentials: true },
       );
-      handleMessage('狀態更新成功！');
+      if (response.data.status === 'success') {
+        handleMessage(response.data.message || '狀態更新成功！');
+      } else {
+        // 錯誤時，將狀態回滾並顯示訊息
+        if (item) item.status = originalStatus;
+        handleMessage(response.data.message || '狀態更新失敗。');
+      }
     } catch (error) {
-      console.error('Failed to update admin status:', error);
-      handleMessage('伺服器錯誤，無法更新狀態。');
-      // 錯誤時，將狀態回滾
+      console.error('Failed to update admin status:', error); // 錯誤時，將狀態回滾
       if (item) item.status = originalStatus;
+      if (error.response && error.response.data) {
+        handleMessage(error.response.data.message);
+      } else {
+        handleMessage('無法連接到伺服器。');
+      }
     }
   };
 
