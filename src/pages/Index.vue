@@ -31,15 +31,13 @@
     return [];
   }
   
-  // 根據使用者的角色過濾選單
-  return all_MenuItems.filter(item => {
-    // 如果項目沒有設定權限（role），則所有登入使用者都可以看見
-    if (item.role === undefined) {
-      return true;
-    }
-    // 如果項目有設定權限，則只允許符合權限的使用者看見
-    return item.role === authStore.user.role;
-  });
+  // 超級管理員（role 0）可以看見所有選單項目
+  if (authStore.user.role === 0) {
+    return all_MenuItems;
+  }
+
+  // 其他管理員（例如 role 1）只能看見沒有設定 role 的選單項目
+  return all_MenuItems.filter(item => item.role === undefined);
 });
 
 

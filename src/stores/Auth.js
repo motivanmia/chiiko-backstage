@@ -46,13 +46,19 @@ export const useAuthStore = defineStore('auth', () => {
         {
           withCredentials: true,
         }
+        
       );
-      
       // 💡 登入成功時，更新 Pinia 狀態
-      if (response.status === 200) {
+      if (response.data.status === 'success') {
         // 登入成功後，立刻檢查 Session 並更新狀態
         user.value = response.data.user; 
         return { success: true, message: response.data.message };
+      }else {
+        // 處理後端回傳 status 為 'fail' 的情況
+        return { 
+          success: false, 
+          message: response.data.message 
+        };
       }
 
     } catch (error) {

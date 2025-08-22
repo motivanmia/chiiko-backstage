@@ -103,7 +103,12 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
   if (!authStore.isLogin) {
-    await authStore.checkSession();
+    try {
+      await authStore.checkSession();
+    } catch (error) {
+      // 處理 Session 檢查失敗的情況，例如伺服器錯誤
+      console.error('Session check failed:', error);
+    }
   }
 
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
@@ -117,12 +122,17 @@ router.beforeEach(async (to, from, next) => {
     });
   }
   //  檢查權限是否足夠
-  else if (requiresRole !== undefined && authStore.user?.role !== requiresRole) {
-    // 💡 頁面要求特定權限，但使用者權限不符
-    alert('您的權限不足，無法進入此頁面。');
-    next('/member'); // 導向首頁或一個權限不足的提示頁
+  else if (requiresRole !== undefined) {
+    if (authStore.user && authStore.user.role === requiresRole) {
+      next();
+    } else {
+      // 權限不符
+      alert('您的權限不足，無法進入此頁面。');
+      next('/member');
+    }
   } else {
-    next(); //這個是固定用法
+    // 頁面不需要特定權限，直接通過
+    next();
   }
 });
 
