@@ -47,6 +47,7 @@
           return {
             ...item, // 複製所有原始屬性
             role: roleToText(item.role), // 將 role 數字轉換為中文
+            status: item.status === 0 ? true : false,
           };
         });
         // ✅ 成功取得資料後，更新 tableData
@@ -73,7 +74,7 @@
   const optionsGenerator = (data) => {
     const uniqueStatuses = [...new Set(data.map((item) => item.status))];
     return uniqueStatuses.map((status) => ({
-      label: status === 1 ? '正常' : '停權',
+      label: status === 0 ? '正常' : '停權',
       value: status,
       children: [],
     }));
