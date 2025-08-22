@@ -46,7 +46,7 @@
         const processedData = response.data.data.map((item) => {
           return {
             ...item, // 複製所有原始屬性
-            role: roleToText(item.role), // 將 role 數字轉換為中文
+            role: roleToText(parseInt(item.role)), // 將 role 數字轉換為中文
             // status: item.status === 0 ? true : false,
           };
         });
