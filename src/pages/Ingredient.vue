@@ -122,12 +122,13 @@
         }),
       });
       const raw = await res.text();
+      ElMessage.success('狀態更新成功');
       if (!res.ok) throw new Error(raw.slice(0, 200));
       const data = JSON.parse(raw);
-      if (data.status !== 'success') throw new Error(data.message || '更新失敗');
+      if (data.status !== 'success') throw new Error(data.message || '狀態更新失敗');
     } catch (err) {
       if (row && prev != null) row.status = prev; // 回滾
-      alert(`更新失敗：${err.message || err}`);
+      alert(`狀態更新失敗：${err.message || err}`);
     } finally {
       updatingId.value = null;
     }

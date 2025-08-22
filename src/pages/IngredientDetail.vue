@@ -413,7 +413,7 @@
       if (data.status !== 'success') throw new Error(data.message || '新增失敗');
 
       ElMessage.success('已新增');
-      // router.push({ name: 'ingredient' });
+      router.push({ name: 'ingredient' });
     } catch (e) {
       console.error(e);
       ElMessage.error(e.message || '新增失敗');
