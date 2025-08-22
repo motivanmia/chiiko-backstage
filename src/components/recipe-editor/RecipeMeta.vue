@@ -7,6 +7,7 @@
         @input="$emit('update:category', $event.target.value)"
         class="form-select"
       >
+        <!-- 這裡的 v-for 會使用從父層傳進來的 categories prop -->
         <option
           v-for="c in categories"
           :key="c.value"
@@ -58,36 +59,37 @@
 </template>
 
 <script setup>
-  // Script 內容完全不需修改
-  defineProps(['category', 'time', 'servings']);
+  // ⭐️ 核心修改 1: 宣告 props，明確地告訴 Vue 這個元件會從父層接收一個名為 'categories' 的陣列
+  defineProps({
+    category: String,
+    time: String,
+    servings: String,
+    categories: Array, // 接收來自父層的 categories 陣列
+  });
+
   defineEmits(['update:category', 'update:time', 'update:servings']);
-  const categories = [
-    { value: 'single', label: '一人料理' },
-    { value: 'family', label: '家庭聚餐' },
-    { value: 'romantic', label: '浪漫晚餐' },
-    { value: 'outdoor', label: '戶外料理' },
-    { value: 'lazy', label: '懶人快煮' },
-    { value: 'fitness', label: '健身/減糖餐' },
-    { value: 'budget', label: '低預算料理' },
-    { value: 'festival', label: '慶生/節慶料理' },
-  ];
+
+  // ⭐️ 核心修改 2: 將 categories 的定義從這裡移除
+  // const categories = [ ... ]; // <-- 刪除或註解掉這一整段
+
+  // cooking time 和 serving size 的選項是固定的，可以保留在子層
   const servingOptions = [
-    { value: '2', label: '1~2' },
-    { value: '4', label: '3~4' },
-    { value: '6', label: '5~6' },
-    { value: '8', label: '7~8' },
-    { value: '10', label: '9+' },
+    { value: '1~2', label: '1~2' },
+    { value: '3~4', label: '3~4' },
+    { value: '5~6', label: '5~6' },
+    { value: '7~8', label: '7~8' },
+    { value: '9+', label: '9+' },
   ];
   const timeOptions = [
-    { value: '5', label: '5' },
-    { value: '10', label: '10' },
-    { value: '15', label: '15' },
-    { value: '20', label: '20' },
-    { value: '30', label: '30' },
-    { value: '45', label: '45' },
-    { value: '60', label: '60' },
-    { value: '90', label: '90' },
-    { value: '120', label: '120' },
+    { value: '5~10', label: '5~10' },
+    { value: '10~15', label: '10~15' },
+    { value: '15~20', label: '15~20' },
+    { value: '20~30', label: '20~30' },
+    { value: '30~45', label: '30~45' },
+    { value: '45~60', label: '45~60' },
+    { value: '60~90', label: '60~90' },
+    { value: '90~120', label: '90~120' },
+    { value: '120~180', label: '120~180' },
     { value: '180+', label: '180+' },
   ];
 </script>
@@ -101,7 +103,7 @@
     max-width: 100%;
     display: flex;
     /* ✨ 修改點：原本的 space-between 不再需要，改用 gap 控制間距 */
-    gap: 50px;
+    gap: 30px;
   }
 
   /* 為下拉選單的「父層容器」加上相對定位 */

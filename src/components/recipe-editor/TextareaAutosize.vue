@@ -10,16 +10,13 @@
       </span>
     </div>
 
-    <!-- 
-      結構保持不變，我們仍然使用 ref 來控制 textarea
-    -->
     <textarea
       ref="textareaRef"
       :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
-      :placeholder="dynamicPlaceholder"
+      :placeholder="placeholder"
       :maxlength="maxLength"
-      class="form-input-autosize"
+      class="form-textarea"
       rows="1"
     ></textarea>
 
@@ -35,86 +32,56 @@
 <script setup>
   import { ref, watch, onMounted, nextTick } from 'vue';
 
-  /**
-   * ⭐️ 關鍵 1: 新增 initialHeight prop
-   * 用來接收外部傳入的初始/最小高度值。
-   * 我們給它一個預設值 62，這樣在不傳入此 prop 時，它仍然能像之前的版本一樣運作。
-   */
   const props = defineProps({
     modelValue: { type: [String, Number], default: '' },
     label: { type: String, required: true },
+    placeholder: { type: String, default: '請輸入內容' },
     maxLength: Number,
     warning: String,
-    placeholderDesktop: { type: String, default: '請輸入內容' },
-    initialHeight: { type: Number, default: 62 }, // 新增的 Prop
+    initialHeight: { type: Number, default: 62 },
   });
 
   defineEmits(['update:modelValue']);
 
   const textareaRef = ref(null);
 
-  /**
-   * ⭐️ 關鍵 2: 升級 adjustHeight 函式
-   * 現在它會考慮 initialHeight。
-   */
   const adjustHeight = () => {
     const textarea = textareaRef.value;
     if (textarea) {
-      // 取得我們設定的最小高度
       const minHeight = props.initialHeight;
-
-      // 1. 暫時重設高度，讓瀏覽器計算內容所需高度
       textarea.style.height = 'auto';
-
-      // 2. 取得內容實際需要的捲動高度
       const scrollHeight = textarea.scrollHeight;
-
-      // 3. 核心邏輯：
-      //    最終的高度，取「內容所需高度」和「我們設定的最小高度」中較大的那一個。
-      //    這樣就保證了它絕不會縮小到比 initialHeight 更小。
       textarea.style.height = `${Math.max(scrollHeight, minHeight)}px`;
     }
   };
 
-  // 監聽器和生命週期鉤子保持不變，它們會自動調用升級後的 adjustHeight 函式
   watch(
     () => props.modelValue,
-    async () => {
-      await nextTick();
-      adjustHeight();
+    () => {
+      nextTick(adjustHeight);
     },
   );
 
-  onMounted(() => {
-    // 為了讓初始高度立即生效，我們在 onMounted 中就呼叫一次
-    adjustHeight();
-  });
+  onMounted(adjustHeight);
 </script>
 
 <style lang="scss" scoped>
   .form-field {
+    /* ⭐️ 關鍵修正：恢復您原本的寬度設定 ⭐️ */
     width: 800px;
     max-width: 100%;
     position: relative;
   }
-
   .title-group {
     display: flex;
     align-items: baseline;
     gap: 16px;
     margin-bottom: 10px;
   }
-
   .form-label {
     font-size: 28px;
   }
-
-  .form-input-singleline {
-    white-space: nowrap;
-    overflow: hidden;
-  }
-
-  .form-input-autosize {
+  .form-textarea {
     width: 100%;
     padding: 1rem 1.5rem;
     padding-right: 85px;
@@ -125,18 +92,10 @@
     font-size: 20px;
     line-height: 1.5;
     box-sizing: border-box;
-
-    /* 
-    ⭐️ 關鍵 3: CSS 的調整
-    我們不再需要寫死的 min-height，因為這個值現在完全由 JavaScript 根據
-    initialHeight prop 來動態控制，這樣更加靈活。
-  */
     resize: none;
     overflow: hidden;
-
     white-space: normal;
     overflow-wrap: break-word;
-
     transition: height 0.1s ease-in-out;
 
     &:focus {
@@ -145,7 +104,6 @@
       box-shadow: 0 0 8px rgba(91, 157, 217, 0.5);
     }
   }
-
   .char-counter {
     position: absolute;
     bottom: 15px;

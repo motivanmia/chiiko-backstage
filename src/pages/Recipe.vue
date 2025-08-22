@@ -1,13 +1,17 @@
 <script setup>
+  // 1. 引入改造後的燈箱元件，並改個更適合的名字
+  import RecipeEditorModal from '@/pages/RecipeEditPage.vue';
   import { ref } from 'vue';
   import { useFilter } from '@/composables/useFilter';
   import Table from '@/components/Table.vue';
   import TheHeader from '@/components/common/TheHeader.vue';
 
+  // 2. 建立一個 ref 來控制燈箱的顯示/隱藏
+  const isEditorModalVisible = ref(false);
+
+  // --- 您原本的 script 內容維持不變 ---
   const searchOption = ref([]);
   const searchText = ref('');
-
-  // 內容
   const columns = ref([
     { prop: 'number', label: '食譜編號', width: 200 },
     { prop: 'category', label: '食譜分類', width: 150 },
@@ -18,74 +22,24 @@
     { prop: 'icon', label: '詳細', type: 'button-detail', width: 100 },
     { prop: 'del', label: '刪除', type: 'button-del', width: 100 },
   ]);
-
-  const tableData = ref([
-    {
-      number: 'R01',
-      category: '家庭聚餐',
-      name: '法式焦糖布丁',
-      author: '管理員',
-      date: '2025-07-07',
-      status: '草稿',
-    },
-    {
-      number: 'R01',
-      category: '減糖料理',
-      name: '櫛瓜豆皮蛋餅',
-      author: '塔馬可吉',
-      date: '2025-07-07',
-      status: '待審核',
-    },
-    {
-      number: 'R01',
-      category: '一人料理',
-      name: '柚子胡椒雞肉蕎麥麵',
-      author: '管理員',
-      date: '2025-07-07',
-      status: '已發布',
-    },
-  ]);
-
-  // 定義選項生成邏輯
+  const tableData = ref([]);
   const optionsGenerator = (data) => {
-    // 定義主選項
     const mainOptions = [
       { label: '管理員', value: '管理員' },
       { label: '會員', value: ['not', '管理員'] },
     ];
-
-    // 為每個主選項生成子選項
-    const secOptions = mainOptions.map((mainOpt) => {
-      let subChildren = [];
-
-      if (mainOpt.value === '管理員') {
-        // 主選項是admin時 篩選出author為管理員的資料
-        const adminData = data.filter((item) => item.author === '管理員');
-        // 依據資料項目生成子選項(狀態)
-        const uniqueName = [...new Set(adminData.map((item) => item.status))];
-        subChildren = uniqueName.map((status) => ({
-          label: status,
-          value: status,
-        }));
-      } else if (mainOpt.value !== '管理員') {
-        // 主選項是non-admin時 篩選出author不是管理員的資料
-        const nonAdminData = data.filter((item) => item.author !== '管理員');
-        // 依據資料項目生成子選項(狀態)
-        const uniqueName = [...new Set(nonAdminData.map((item) => item.status))];
-        subChildren = uniqueName.map((status) => ({
-          label: status,
-          value: status,
-        }));
-      }
+    return mainOptions.map((mainOpt) => {
+      const sourceData =
+        mainOpt.value === '管理員'
+          ? data.filter((item) => item.author === '管理員')
+          : data.filter((item) => item.author !== '管理員');
+      const uniqueStatuses = [...new Set(sourceData.map((item) => item.status))];
       return {
         ...mainOpt,
-        children: subChildren,
+        children: uniqueStatuses.map((status) => ({ label: status, value: status })),
       };
     });
-    return secOptions;
   };
-
-  // 使用composable生成選項
   const { dropOptions, filterData } = useFilter(
     tableData,
     searchOption,
@@ -97,15 +51,24 @@
 </script>
 
 <template>
+  <!-- 3. 將 @create 事件的行為，從「路由跳轉」改成「打開燈箱」 -->
   <TheHeader
     title="食譜管理"
     v-model:searchOption="searchOption"
     v-model:searchText="searchText"
     :dropOptions="dropOptions"
+    @create="isEditorModalVisible = true"
   />
   <Table
     :table-data="filterData"
     :columns="columns"
+  />
+
+  <!-- 4. 在頁面底部放置燈箱元件，並用 v-if 控制 -->
+  <!--    監聽從燈箱內部發射出來的 @close 事件，來關閉燈箱 -->
+  <RecipeEditorModal
+    v-if="isEditorModalVisible"
+    @close="isEditorModalVisible = false"
   />
 </template>
 
