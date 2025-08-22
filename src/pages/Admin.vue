@@ -1,6 +1,6 @@
 <script setup>
   import axios from 'axios';
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, computed } from 'vue';
   import { useFilter } from '@/composables/useFilter';
   import { columns } from '@/constants/admin';
   import TheHeader from '@/components/common/TheHeader.vue';
@@ -47,7 +47,7 @@
           return {
             ...item, // 複製所有原始屬性
             role: roleToText(parseInt(item.role)), // 將 role 數字轉換為中文
-            // status: item.status === 0 ? true : false,
+            status: parseInt(item.status),
           };
         });
         // ✅ 成功取得資料後，更新 tableData
@@ -134,6 +134,8 @@
         return '管理員';
     }
   };
+
+  const currentUserId = computed(() => authStore.user?.manager_id);
 </script>
 
 <template>
@@ -150,6 +152,7 @@
     @toggle-status="handleStatusToggle"
     :table-data="filterData"
     :columns="columns"
+    :currentUserId="currentUserId"
   />
   <AddAdminModal
     v-if="isModalVisible"
