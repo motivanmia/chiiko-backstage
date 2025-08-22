@@ -9,7 +9,7 @@
       type: Array,
       default: () => ['save', 'cancel'],
     },
-    enableImageUpload: {
+    enableImageTip: {
       type: Boolean,
       default: false,
     },
@@ -24,7 +24,7 @@
         :title="title"
         class="the-detail-header__title"
       />
-      <ImageTip v-if="enableImageUpload" />
+      <ImageTip v-if="enableImageTip" />
     </div>
 
     <div class="the-detail-header__button-wrap">

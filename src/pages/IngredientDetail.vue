@@ -493,7 +493,7 @@
     <TheDetailHeader
       title="食材燈箱編輯"
       :buttons="[]"
-      :enable-image-upload="true"
+      :enable-image-tip="true"
     />
   </div>
 

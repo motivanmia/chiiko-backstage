@@ -17,9 +17,9 @@
       />
     </template>
 
-    <!-- 觸發的 icon（你的自訂 Icon 元件） -->
+    <!-- 觸發的 icon -->
     <Icon
-      icon-name="edit"
+      icon-name="hint"
       class="icon"
       @click="$emit('edit-click', scope.row)"
     />
@@ -34,5 +34,8 @@
   }
   .hover-icon {
     cursor: help;
+  }
+  .icon {
+    font-size: 24px;
   }
 </style>
