@@ -4,22 +4,38 @@
     @dragover.prevent
     @drop.prevent="handleDrop"
   >
-    <img
-      v-if="previewUrl"
-      :src="previewUrl"
-      class="image-preview"
-    />
-    <div class="upload-content">
+    <!-- 為了更好的使用者體驗，我們將點擊事件加在整個預覽圖上 -->
+    <label
+      for="file-input"
+      class="image-preview-label"
+    >
+      <img
+        v-if="previewUrl"
+        :src="previewUrl"
+        class="image-preview"
+      />
+      <!-- 新增一個預設的 placeholder 狀態 -->
+      <div
+        v-else
+        class="placeholder-content"
+      ></div>
+    </label>
+
+    <!-- 將按鈕放在外部，或者您可以將它完全移除，讓使用者直接點擊預覽區 -->
+    <div class="upload-button-container">
       <BaseButton
         @click="triggerFile"
         class="upload-button-override"
       >
-        新增食譜圖片
+        選擇食譜圖片
       </BaseButton>
     </div>
+
+    <!-- 真正用來選擇檔案的 input 元素，保持隱藏 -->
     <input
       type="file"
       ref="fileInput"
+      id="file-input"
       accept="image/*"
       class="file-input"
       @change="handleFileChange"
@@ -31,21 +47,39 @@
   import { ref } from 'vue';
   import BaseButton from '@/components/common/BaseButton.vue';
 
+  // ⭐️ 核心修改 1: 宣告這個元件會發出一個叫做 `update:file` 的事件
+  const emit = defineEmits(['update:file']);
+
   const previewUrl = ref('');
   const fileInput = ref(null);
 
+  // 當使用者點擊「選擇圖片」按鈕時，觸發隱藏的 input 點擊事件
   const triggerFile = () => fileInput.value?.click();
 
-  const updatePreview = (file) => {
-    if (file) {
+  // 統一處理檔案更新的函式
+  const processFile = (file) => {
+    // 驗證是否有檔案，以及檔案是否為圖片類型
+    if (file && file.type.startsWith('image/')) {
+      // 產生一個暫時的 URL，用來在畫面上預覽圖片
       previewUrl.value = URL.createObjectURL(file);
-      // You can emit the file to the parent component here if needed
-      // emit('file-updated', file);
+
+      // ⭐️ 核心修改 2: 【最關鍵的一步】
+      //    觸發 'update:file' 事件，並將使用者選擇的檔案物件 (file)
+      //    當作「包裹」一起發送給父層 (RecipeEditPage.vue)
+      emit('update:file', file);
+    } else {
+      // 如果選擇的不是圖片或取消選擇，就清空
+      previewUrl.value = '';
+      emit('update:file', null);
+      alert('請選擇有效的圖片檔案 (jpg, png, gif)。');
     }
   };
 
-  const handleFileChange = (e) => updatePreview(e.target.files[0]);
-  const handleDrop = (e) => updatePreview(e.dataTransfer.files[0]);
+  // 當使用者透過「點擊」選擇檔案時觸發
+  const handleFileChange = (e) => processFile(e.target.files[0]);
+
+  // 當使用者透過「拖曳」放入檔案時觸發
+  const handleDrop = (e) => processFile(e.dataTransfer.files[0]);
 </script>
 
 <style lang="scss" scoped>

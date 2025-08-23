@@ -2,33 +2,44 @@
   import { computed } from 'vue';
   import { ref, onMounted } from 'vue';
   import { useRouter, useRoute } from 'vue-router';
-  import { useAuthGuard } from '@/stores/Auth';
   import logo from '@/assets/image/logo.svg';
 
-  useAuthGuard();
+  import { useAuthStore } from '@/stores/Auth';
 
   const router = useRouter();
   const route = useRoute();
+  const authStore = useAuthStore();
 
-  const user = ref(null);
-
-  onMounted(() => {
-    const data = localStorage.getItem('user');
-    if (data) {
-      user.value = JSON.parse(data);
-    }
+  onMounted(async () => {
+    // 透過 checkSession 函式與後端確認 Session 是否有效
+    await authStore.checkSession();
   });
 
-  const menuItems = [
-    { index: '/admin', title: '後台人員管理' },
+  const all_MenuItems = [
+    { index: '/admin', title: '後台人員管理', role:0 },
     { index: '/member', title: '會員資料查詢' },
     { index: '/recipe', title: '食譜管理' },
-    // { index: '/Recipe-DetailAdmin', title: '食譜管理' },
     { index: '/ingredient', title: '食材學堂管理' },
     { index: '/product', title: '商品管理' },
     { index: '/order', title: '訂單查詢' },
     { index: '/report', title: '留言檢舉管理' },
   ];
+
+  const menuItems = computed(() => {
+  // 如果使用者未登入或沒有角色，則不顯示任何項目
+  if (!authStore.isLogin || authStore.user?.role === undefined) {
+    return [];
+  }
+  
+  // 超級管理員（role 0）可以看見所有選單項目
+  if (authStore.user.role === 0) {
+    return all_MenuItems;
+  }
+
+  // 其他管理員（例如 role 1）只能看見沒有設定 role 的選單項目
+  return all_MenuItems.filter(item => item.role === undefined);
+});
+
 
   const activeMenu = computed(() => {
     const path = route.path;
@@ -43,8 +54,8 @@
     return path;
   });
 
-  function handleLogout() {
-    localStorage.removeItem('user');
+  async function handleLogout() {
+    await authStore.logout();
     router.push('/login'); // ✅ 導回登入頁
   }
 </script>
@@ -52,8 +63,7 @@
 <template>
   <el-container class="layout-container">
     <el-aside>
-      <router-link
-        to="/"
+      <div
         class="logo__link"
       >
         <div class="logo__container">
@@ -66,7 +76,7 @@
           </div>
           <h2 class="logo__title">後台管理系統</h2>
         </div>
-      </router-link>
+      </div>
       <el-menu
         :default-active="activeMenu"
         router
@@ -87,7 +97,7 @@
         <div class="header">
           <!-- <div class="header-user">黃維尼</div> -->
           <div class="header-user">
-            {{ user?.name || '訪客' }}
+            {{ authStore.user?.name || '訪客' }}
           </div>
           <!-- <button class="header-logout">登出</button>
             -->
@@ -188,6 +198,7 @@
   .logo {
     &__link {
       text-decoration: none;
+      cursor: auto;
     }
 
     &__container {

@@ -6,12 +6,13 @@
       v-for="(step, index) in modelValue"
       :key="index"
       class="item-row"
+      :class="{ 'is-dragging': draggedIndex === index }"
       @dragover.prevent
       @drop="drop(index)"
     >
       <div class="inputs-container">
         <div class="step-field">
-          <label class="step-label">步驟 {{ numberToChinese(index + 1) }}</label>
+          <label class="step-label">{{ formatStepLabel(index + 1) }}</label>
           <textarea
             v-model="modelValue[index]"
             placeholder="請輸入步驟內容"
@@ -29,10 +30,15 @@
         >
           <Icon icon-name="remove" />
         </button>
+        <!-- 
+          ===== 關鍵修正 =====
+          之前的版本缺少了 @dragend 事件，這是導致高亮無法消失的根本原因。
+        -->
         <button
           class="icon-button"
           draggable="true"
           @dragstart="dragStart(index)"
+          @dragend="dragEnd"
           title="拖曳換位置"
         >
           <Icon icon-name="drag" />
@@ -56,6 +62,7 @@
   import BaseButton from '@/components/common/BaseButton.vue';
   const props = defineProps({ modelValue: Array });
   const emit = defineEmits(['update:modelValue']);
+
   const add = () => emit('update:modelValue', [...props.modelValue, '']);
   const remove = (index) => {
     if (props.modelValue.length > 1)
@@ -64,19 +71,48 @@
         props.modelValue.filter((_, i) => i !== index),
       );
   };
+
+  // --- START: 完整且正確的拖曳邏輯 ---
+
   const draggedIndex = ref(null);
+
   const dragStart = (index) => {
     draggedIndex.value = index;
   };
+
+  // 【最重要的函式】
+  //  不論拖曳成功或失敗，只要一結束就觸發此函式，確保高亮狀態一定會被清除。
+  const dragEnd = () => {
+    draggedIndex.value = null;
+  };
+
   const drop = (dropIndex) => {
-    if (draggedIndex.value === null) return;
+    if (draggedIndex.value === null || draggedIndex.value === dropIndex) {
+      return;
+    }
     const list = [...props.modelValue];
     const draggedItem = list.splice(draggedIndex.value, 1)[0];
     list.splice(dropIndex, 0, draggedItem);
     emit('update:modelValue', list);
-    draggedIndex.value = null;
   };
-  const numberToChinese = (num) => '一二三四五六七八九十'[num - 1] || num;
+
+  // --- END: 拖曳邏輯 ---
+
+  const numberToChinese = (num) => {
+    if (typeof num !== 'number' || num < 1) return num;
+    const singleDigits = '一二三四五六七八九';
+    const ten = '十';
+    if (num <= 10) return num === 10 ? ten : singleDigits[num - 1];
+    if (num > 10 && num < 20) return ten + singleDigits[(num % 10) - 1];
+    const tensDigit = Math.floor(num / 10);
+    const unitDigit = num % 10;
+    if (unitDigit === 0) return singleDigits[tensDigit - 1] + ten;
+    return singleDigits[tensDigit - 1] + ten + singleDigits[unitDigit - 1];
+  };
+
+  const formatStepLabel = (num) => {
+    return '步驟' + numberToChinese(num);
+  };
 </script>
 
 <style lang="scss" scoped>
@@ -88,16 +124,13 @@
   .form-label {
     display: block;
     font-size: 28px;
-    /* FIX #1: 料理步驟與步驟一的間距為 35px */
     margin-bottom: 35px;
   }
 
-  /* FIX #2: 使用 align-items: center 來讓整行垂直居中對齊 */
   .item-row {
     display: flex;
     gap: 16px;
-    align-items: center; /* 魔法在這裡！ */
-    /* FIX #3: 輸入框與下一個步驟的間距為 30px */
+    align-items: center;
     margin-bottom: 30px;
   }
 
@@ -109,9 +142,8 @@
   }
   .step-label {
     display: block;
-    /* FIX #4: 步驟一和輸入框的間距為 15px */
     margin-bottom: 15px;
-    font-size: 28px;
+    font-size: 24px;
   }
   .step-input {
     width: 100%;
@@ -123,9 +155,18 @@
     background-color: white;
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
     font-size: 20px;
+    transition: background-color 0.2s ease;
   }
 
-  /* FIX #5: 讓按鈕區和 IngredientsManager 的完全一樣 */
+  /* 
+    關鍵樣式：
+    這個樣式會讓被拖曳的項目 (擁有 is-dragging class) 
+    內部的輸入框 (.step-input) 改變背景色。
+  */
+  .item-row.is-dragging .step-input {
+    background-color: rgba(0, 0, 0, 0.25);
+  }
+
   .actions-container {
     display: flex;
     justify-content: space-between;
@@ -139,49 +180,34 @@
     cursor: pointer;
   }
 
-  /* FIX #6: 新增步驟與上面的元件的間距為 30px */
   .add-button-override {
     margin-top: 30px;
   }
 
   @media (max-width: 768px) {
-    /* 1. 設定每一列 (item-row) 為 Flex 容器 */
     .item-row {
       display: flex;
-      flex-wrap: wrap; /* 允許內容換行 */
-      justify-content: space-between; /* 將第一行的元素推向左右兩側 */
-      align-items: center; /* 讓第一行的元素垂直置中 */
-      row-gap: 8px; /* 設定第一行 (標題+按鈕) 和第二行 (輸入框) 之間的間距 */
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      row-gap: 8px;
     }
-
-    /* 2. 關鍵修正：讓這兩個容器在排版上「消失」，
-     使其內部的子元素可以參與 item-row 的 Flex 排版 */
     .inputs-container,
     .step-field {
       display: contents;
     }
-
-    /* 3. 現在可以正確地使用 order 重新定義視覺順序 */
-
-    /* 「步驟一」標籤，視覺上排第一 (左上角) */
     .step-label {
       order: 1;
     }
-
-    /* 右側按鈕區塊，視覺上排第二 (右上角) */
     .actions-container {
       order: 2;
     }
-
-    /* 文字輸入框，視覺上排第三，並強制它佔滿一整行換到下一行 */
     .step-input {
       order: 3;
-      width: 100%; /* 寬度 100%，使其強制換行 */
-      height: 120px; /* 您可以自訂需要的高度 */
+      width: 100%;
+      height: 120px;
       box-sizing: border-box;
     }
-
-    /* (可選) 為了整體視覺一致性，也讓「新增步驟」按鈕在手機上滿版 */
     .add-button-override {
       width: 100%;
     }

@@ -1,3 +1,61 @@
+<script setup>
+  import Icon from '@/components/common/Icon.vue';
+  import switch_el from '@/components/Switch.vue';
+  import ImageCell from '@/components/common/ImageCell.vue';
+  import DropMenu from '@/components/common/DropMenu.vue';
+
+  defineProps({
+    tableData: {
+      type: Array,
+      default: () => [],
+    },
+    columns: {
+      type: Array,
+      default: () => [],
+    },
+    yes: {
+      type: String,
+    },
+    no: {
+      type: String,
+    },
+    enableImageUpload: {
+      type: Boolean,
+      default: false,
+    },
+    currentUserId: {
+      type: [Number, String], // 確保型別可以匹配
+      required: null,
+    },
+  });
+
+  // ✨ [關鍵] 3. 聲明這個元件會發送一個名為 'button-click' 的事件
+  // 用於將狀態變動的資訊傳給上層父元件
+  const emit = defineEmits([
+    'button-click',
+    'toggle-status',
+    'edit-click',
+    'del-click',
+    'text-change',
+    'image-upload',
+    'image-remove',
+  ]);
+  // ✨ [關鍵] 4. 當預設的圖示按鈕被點擊時，觸發這個函式
+  function handleIconClick(rowData) {
+    // 發送事件，並將該行的完整資料(rowData)作為參數傳出去
+    emit('button-click', rowData);
+  }
+
+  // switch狀態切換函式
+  function handleStatusToggle(rowData, newStatus) {
+    emit('toggle-status', { rowData, newStatus });
+  }
+  function resolveOptions(col, row) {
+    const opts = typeof col.options === 'function' ? col.options(row) : col.options;
+    return Array.isArray(opts) ? opts : [];
+  }
+</script>
+
 <template>
   <el-table
     :data="tableData"
@@ -27,7 +85,7 @@
           <Icon
             icon-name="edit"
             class="icon"
-            @click="handleIconClick(scope.row)"
+            @click="$emit('edit-click', scope.row)"
           />
         </div>
 
@@ -36,21 +94,93 @@
           <Icon
             icon-name="del"
             class="icon"
-            @click="handleIconClick(scope.row)"
+            @click="$emit('del-click', scope.row)"
           />
         </div>
 
         <!-- 狀態開關類型 -->
         <div v-else-if="col.type === 'status'">
-          <switch_el />
+          <template v-if="scope.row.role === '超級管理員' && scope.row.manager_id == currentUserId">
+            <span>{{ scope.row.status === 0 ? '正常' : '停權' }}</span>
+          </template>
+          <template v-else>
+            <switch_el
+              v-model="scope.row[col.prop]"
+              :yes="yes"
+              :no="no"
+              @toggle="(newStatus) => emit('toggle-status', { rowData: scope.row, newStatus })"
+            />
+          </template>
         </div>
 
-        <!-- 圖片類型 -->
+        <!-- 圖片類型（可上傳/更換/移除） -->
         <div v-else-if="col.type === 'image'">
-          <img
-            :src="scope.row[col.prop]"
-            alt=""
-            style="width: 100px; height: 100px; border-radius: 4px; object-fit: contain"
+          <ImageCell
+            v-model="scope.row[col.prop]"
+            :editable="enableImageUpload"
+            :width="120"
+            :height="120"
+            @select="
+              (p) => {
+                // p = { file, url, name, mime, size, source }
+                scope.row[`${col.prop}Meta`] = p; // 暫存這一欄的上傳 meta
+                $emit('image-upload', { row: scope.row, prop: col.prop, ...p });
+              }
+            "
+            @remove="
+              () => {
+                delete scope.row[`${col.prop}Meta`];
+                $emit('image-remove', { row: scope.row, prop: col.prop });
+              }
+            "
+          />
+        </div>
+
+        <!-- 文字編輯類型 -->
+        <div v-else-if="col.type === 'text-edit'">
+          <el-input
+            v-model="scope.row[col.prop]"
+            :placeholder="col.placeholder || ''"
+            :maxlength="col.maxlength"
+            :show-word-limit="!!col.maxlength"
+            size="default"
+            @change="(val) => emit('text-change', { row: scope.row, prop: col.prop, value: val })"
+            @keydown.enter.stop
+            type="textarea"
+            :rows="3"
+            autosize
+          />
+        </div>
+
+        <!-- 下拉選單 -->
+        <div
+          v-else-if="col.type === 'select'"
+          class="cell-select"
+        >
+          <el-select
+            v-model="scope.row[col.prop]"
+            :placeholder="col.placeholder || '請選擇'"
+            :clearable="col.clearable !== false"
+            :filterable="!!col.filterable"
+            :multiple="!!col.multiple"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="opt in resolveOptions(col, scope.row)"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
+        </div>
+
+        <div
+          v-else-if="col.type === 'cascader'"
+          class="cell-cascader"
+        >
+          <DropMenu
+            v-model="scope.row[col.prop]"
+            :options="resolveOptions(col, scope.row)"
           />
         </div>
 
@@ -65,31 +195,6 @@
     </el-table-column>
   </el-table>
 </template>
-
-<script setup>
-  import Icon from '@/components/common/Icon.vue';
-  import switch_el from '@/components/Switch.vue';
-
-  defineProps({
-    tableData: {
-      type: Array,
-      default: () => [],
-    },
-    columns: {
-      type: Array,
-      default: () => [],
-    },
-  });
-
-  // ✨ [關鍵] 3. 聲明這個元件會發送一個名為 'button-click' 的事件
-  const emit = defineEmits(['button-click']);
-
-  // ✨ [關鍵] 4. 當預設的圖示按鈕被點擊時，觸發這個函式
-  function handleIconClick(rowData) {
-    // 發送事件，並將該行的完整資料(rowData)作為參數傳出去
-    emit('button-click', rowData);
-  }
-</script>
 
 <style lang="scss" scoped>
   .icon {

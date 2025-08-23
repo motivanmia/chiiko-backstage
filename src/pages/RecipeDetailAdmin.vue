@@ -1,7 +1,36 @@
+<template>
+  <div class="recipe-board">
+    <div class="recipe-board__manage">
+      <MyTitle title="食譜管理"></MyTitle>
+      <!-- 4. 在 IncreaseButton 上綁定 click 事件 -->
+      <IncreaseButton @click="goToAddRecipePage"></IncreaseButton>
+    </div>
+
+    <div class="recipe-board__query">
+      <DropMenu
+        v-model="selectedStatus"
+        :options="recipeOptions"
+        class="recipe-board__drop"
+      ></DropMenu>
+      <Search class="recipe-board__search" />
+    </div>
+  </div>
+
+  <div class="recipe-board__contents">
+    <Table
+      :table-data="tableData"
+      :columns="columns"
+    ></Table>
+  </div>
+</template>
+
 <script setup>
   import 'element-plus/theme-chalk/el-cascader.css';
 
   import { ref } from 'vue';
+  // 1. 從 vue-router 導入 useRouter
+  import { useRouter } from 'vue-router';
+
   // import { Search } from '@element-plus/icons-vue';
   import DropMenu from '@/components/common/DropMenu.vue';
 
@@ -35,6 +64,18 @@
   const searchText = ref('');
 
   const handleSearch = () => {};
+
+  // 2. 實例化 router
+  const router = useRouter();
+
+  // 3. 建立一個處理跳轉的函式
+  const goToAddRecipePage = () => {
+    // 使用 router.push 導航到 RecipeEditPage.vue 對應的路由
+    // 這個路由路徑 '/recipe-edit' 需要在你的 router 設定檔中定義
+    console.log('goToAddRecipePage 函式被成功呼叫了！');
+
+    router.push('/recipe-edit');
+  };
 
   //內容
 
@@ -82,31 +123,6 @@
     },
   ]);
 </script>
-
-<template>
-  <div class="recipe-board">
-    <div class="recipe-board__manage">
-      <MyTitle title="食譜管理"></MyTitle>
-      <IncreaseButton></IncreaseButton>
-    </div>
-
-    <div class="recipe-board__query">
-      <DropMenu
-        v-model="selectedStatus"
-        :options="recipeOptions"
-        class="recipe-board__drop"
-      ></DropMenu>
-      <Search class="recipe-board__search" />
-    </div>
-  </div>
-
-  <div class="recipe-board__contents">
-    <Table
-      :table-data="tableData"
-      :columns="columns"
-    ></Table>
-  </div>
-</template>
 
 <style lang="scss" scoped>
   .recipe-board {

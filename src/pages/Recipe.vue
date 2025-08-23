@@ -1,162 +1,75 @@
 <script setup>
-  import 'element-plus/theme-chalk/el-cascader.css';
-
+  // 1. 引入改造後的燈箱元件，並改個更適合的名字
+  import RecipeEditorModal from '@/pages/RecipeEditPage.vue';
   import { ref } from 'vue';
-  // import { Search } from '@element-plus/icons-vue';
-  import DropMenu from '@/components/common/DropMenu.vue';
-
-  import Search from '@/components/common/Search.vue';
-  import MyTitle from '@/components/common/Title.vue';
-  import IncreaseButton from '@/components/common/IncreaseButton.vue';
+  import { useFilter } from '@/composables/useFilter';
   import Table from '@/components/Table.vue';
+  import TheHeader from '@/components/common/TheHeader.vue';
 
-  const selectedStatus = ref(''); // 用於儲存使用者選擇的結果
+  // 2. 建立一個 ref 來控制燈箱的顯示/隱藏
+  const isEditorModalVisible = ref(false);
 
-  const recipeOptions = [
-    {
-      value: 'draft',
-      label: '草稿',
-    },
-    {
-      value: 'approved',
-      label: '已審核',
-    },
-    {
-      value: 'pending',
-      label: '待審核',
-    },
-    {
-      value: 'remove',
-      label: '已下架',
-    },
-  ];
-
-  // 搜尋
+  // --- 您原本的 script 內容維持不變 ---
+  const searchOption = ref([]);
   const searchText = ref('');
-
-  const handleSearch = () => {};
-
-  //內容
-
   const columns = ref([
     { prop: 'number', label: '食譜編號', width: 200 },
     { prop: 'category', label: '食譜分類', width: 150 },
     { prop: 'name', label: '食譜名稱' },
     { prop: 'author', label: '作者' },
-    { prop: 'date', label: '新增日期', width: 200 },
-    { prop: 'status', label: '會員狀態', type: 'status', width: 200 },
+    { prop: 'date', label: '新增日期', width: 150 },
+    { prop: 'status', label: '狀態', width: 200 },
     { prop: 'icon', label: '詳細', type: 'button-detail', width: 100 },
     { prop: 'del', label: '刪除', type: 'button-del', width: 100 },
   ]);
-
-  const tableData = ref([
-    {
-      number: 'R01',
-      category: '家庭聚餐',
-      name: '法式焦糖布丁',
-      author: '管理員',
-      date: '2025-07-07',
-      status: '草稿',
-      icon: '',
-      del: '',
-    },
-    {
-      number: 'R01',
-      category: '減糖料理',
-      name: '櫛瓜豆皮蛋餅',
-      author: '塔馬可吉',
-      date: '2025-07-07',
-      status: '待審核',
-      icon: '',
-      del: '',
-    },
-    {
-      number: 'R01',
-      category: '一人料理',
-      name: '柚子胡椒雞肉蕎麥麵',
-      author: '管理員',
-      date: '2025-07-07',
-      status: '已發布',
-      icon: '',
-      del: '',
-    },
-  ]);
+  const tableData = ref([]);
+  const optionsGenerator = (data) => {
+    const mainOptions = [
+      { label: '管理員', value: '管理員' },
+      { label: '會員', value: ['not', '管理員'] },
+    ];
+    return mainOptions.map((mainOpt) => {
+      const sourceData =
+        mainOpt.value === '管理員'
+          ? data.filter((item) => item.author === '管理員')
+          : data.filter((item) => item.author !== '管理員');
+      const uniqueStatuses = [...new Set(sourceData.map((item) => item.status))];
+      return {
+        ...mainOpt,
+        children: uniqueStatuses.map((status) => ({ label: status, value: status })),
+      };
+    });
+  };
+  const { dropOptions, filterData } = useFilter(
+    tableData,
+    searchOption,
+    searchText,
+    optionsGenerator,
+    'author',
+    'status',
+  );
 </script>
 
 <template>
-  <div class="recipe-board">
-    <div class="recipe-board__manage">
-      <MyTitle title="食譜管理"></MyTitle>
-      <IncreaseButton></IncreaseButton>
-    </div>
+  <!-- 3. 將 @create 事件的行為，從「路由跳轉」改成「打開燈箱」 -->
+  <TheHeader
+    title="食譜管理"
+    v-model:searchOption="searchOption"
+    v-model:searchText="searchText"
+    :dropOptions="dropOptions"
+    @create="isEditorModalVisible = true"
+  />
+  <Table
+    :table-data="filterData"
+    :columns="columns"
+  />
 
-    <div class="recipe-board__query">
-      <DropMenu
-        v-model="selectedStatus"
-        :options="recipeOptions"
-        class="recipe-board__drop"
-      ></DropMenu>
-      <Search class="recipe-board__search" />
-    </div>
-
-    <div class="recipe-board__contents">
-      <Table
-        :table-data="tableData"
-        :columns="columns"
-      >
-        <template #del>
-          <Icon
-            class="del-button"
-            icon-name="del"
-          />
-        </template>
-      </Table>
-    </div>
-  </div>
+  <!-- 4. 在頁面底部放置燈箱元件，並用 v-if 控制 -->
+  <!--    監聽從燈箱內部發射出來的 @close 事件，來關閉燈箱 -->
+  <RecipeEditorModal
+    v-if="isEditorModalVisible"
+    @close="isEditorModalVisible = false"
+  />
 </template>
 
-<style lang="scss" scoped>
-  .recipe-board {
-    &__manage {
-      display: flex;
-      justify-content: space-between;
-      align-content: center;
-    }
-
-    &__query {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      grid-template-rows: auto;
-      margin-top: 27px;
-      position: relative;
-
-      &::after {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 1px;
-        background-color: color(backgroundColor, recipe);
-        bottom: -30px;
-      }
-
-      .recipe-board__drop {
-        grid-column: 2/3;
-        grid-row: 1;
-        align-self: center;
-      }
-      .recipe-board__search {
-        grid-column: 5/6;
-        grid-row: 1;
-      }
-    }
-
-    .recipe-board__contents {
-      margin-top: 50px;
-
-      .del-button {
-        font-size: 20px;
-        cursor: pointer;
-      }
-    }
-  }
-</style>
+<style lang="scss" scoped></style>
