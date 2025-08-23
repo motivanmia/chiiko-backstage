@@ -7,6 +7,11 @@
   import Table from '@/components/Table.vue';
   import { ingredients } from '@/constants/ingredients.js';
 
+  // 編輯器
+  import { QuillEditor } from '@vueup/vue-quill';
+
+  import '@vueup/vue-quill/dist/vue-quill.snow.css';
+
   const route = useRoute();
 
   /** —— 表頭定義 —— */
@@ -23,6 +28,8 @@
   const ingredientInfoData = ref([]); // 第一張表
   const productImages = ref([]); // 左側圖片
   const preservationText = ref(''); // 右側內文
+  const fileInput = ref(null);
+  const textEditor = ref(null);
 
   onMounted(() => {
     const id = route.params.id;
@@ -47,6 +54,60 @@
     // 右側內文
     preservationText.value = product.preservation || '';
   });
+  const triggerFileSelect = () => {
+    fileInput.value.click();
+  };
+  const handleFileSelect = (event) => {
+    const files = event.target.files;
+    if (!files.length) return;
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.maxWidth = '100%';
+        img.style.borderRadius = '6px';
+        textEditor.value.appendChild(img);
+        textEditor.value.appendChild(document.createElement('br'));
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // 清空 input 以便再次上傳同樣的檔案
+    event.target.value = '';
+  };
+
+  const uploadList = ref([
+    { img: null }, // 預設有一顆按鈕（img=null 表示還沒選檔案）
+  ]);
+
+  // 點選檔案
+  const onSelectFile = (event, index) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      // 把圖塞進 uploadList 對應的位置
+      uploadList.value[index].img = e.target.result;
+
+      // 如果是最後一顆按鈕，選完後再新增一顆空的
+      if (index === uploadList.value.length - 1) {
+        uploadList.value.push({ img: null });
+      }
+    };
+    reader.readAsDataURL(file);
+
+    // 清掉 input.value，避免選同一張圖時不觸發
+    event.target.value = '';
+  };
+  const removeImage = (index) => {
+    uploadList.value.splice(index, 1);
+  };
 </script>
 
 <template>
@@ -68,129 +129,306 @@
 
     <!-- 第二張表：拆成左右兩個 -->
     <div class="ingredient-board__contents ingredient-board__contents--split">
-      <!-- 左邊：窄 -->
-      <Table
-        :table-data="leftTableData"
-        :columns="[{ prop: 'comparisonImage', label: '商品圖片', type: 'image', width: 300 }]"
-        style="flex: 1"
-      />
+      <div class="product-detail-range">
+        <!-- 左 -->
+        <div class="product-detail-block product-detail-title-left">
+          <div class="product-detail-title">商品圖片</div>
+          <div class="product-detail-body">
+            <!-- 匯入圖片按鈕（改成多組圖片+按鈕） -->
+            <div class="upload-section">
+              <div
+                v-for="(item, index) in uploadList"
+                :key="index"
+                class="upload-row"
+              >
+                <!-- 左邊圖片 -->
+                <div
+                  v-if="item.img"
+                  class="preview"
+                >
+                  <img
+                    :src="item.img"
+                    alt="已選圖片"
+                  />
+                  <!-- 刪除按鈕 -->
+                  <button
+                    class="delete-btn"
+                    @click="removeImage(index)"
+                  >
+                    刪除
+                  </button>
+                </div>
 
-      <!-- 右邊：寬 -->
-      <Table
-        :table-data="rightTableData"
-        :columns="[{ prop: 'preservationText', label: '商品編輯', width: 605 }]"
-        style="flex: 2"
-      />
+                <!-- 右邊按鈕 -->
+                <div class="import-btn-wrapper">
+                  <button @click="$refs[`fileInput${index}`][0].click()">選擇檔案</button>
+                  <input
+                    :ref="`fileInput${index}`"
+                    type="file"
+                    accept="image/*"
+                    style="display: none"
+                    @change="(e) => onSelectFile(e, index)"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 右 -->
+        <div class="product-detail-block product-detail-title-right">
+          <div class="product-detail-title">商品內文編輯</div>
+          <div class="product-detail-body">
+            <!-- 右側文字編輯 -->
+            <div>
+              <QuillEditor
+                class="product-detail-editor"
+                v-model="preservationText"
+                :theme="'snow'"
+                placeholder="輸入商品內文..."
+                style="height: 630px; background: white; border-radius: 5px"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- 主體 -->
   <div class="ingredient-board__guide-body">
-    <!-- 左側圖片清單 -->
-    <div class="ingredient-board__images">
-      <div
-        v-for="(img, index) in productImages"
-        :key="index"
-        class="ingredient-board__image"
-      >
-        <img :src="img" alt="商品圖片" />
-        <button class="select-btn">選擇擇定</button>
+    <!-- 左側圖片滾動區 -->
+    <div class="ingredient-board__images-wrapper">
+      <div class="ingredient-board__images">
+        <div
+          v-for="(img, index) in productImages"
+          :key="index"
+          class="ingredient-board__image"
+        >
+          <img
+            :src="img"
+            alt="商品圖片"
+          />
+          <button class="select-btn">選擇擇定</button>
+        </div>
       </div>
     </div>
-
-    <!-- 右側文字編輯 -->
-    <div class="ingredient-board__text">
-      <textarea
-        v-model="preservationText"
-        placeholder="輸入商品內文..."
-      ></textarea>
-    </div>
   </div>
-</div>
 </template>
 
 <style lang="scss" scoped>
-.ingredient-board__guide {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.ingredient-board__guide-header {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 6px 6px 0 0;
-
-  .header-cell {
-    padding: 8px;
-    font-weight: bold;
-    text-align: center;
-    border-right: 1px solid #ddd;
-
-    &:last-child {
-      border-right: none;
-    }
-  }
-}
-
-.ingredient-board__guide-body {
-  display: flex;
-  gap: 16px;
-  border: 1px solid #ddd;
-  border-top: none;
-  border-radius: 0 0 6px 6px;
-  padding: 12px;
-}
-
-.ingredient-board__contents + .ingredient-board__contents {
-  margin-top: 16px;
-}
-
-.ingredient-board__images {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 200px;
-}
-
-.ingredient-board__image {
-  img {
-    width: 100%;
-    border-radius: 6px;
-    border: 1px solid #ddd;
+  /* 左右文字區 */
+  .ingredient-board__text-wrapper {
+    height: 100%;
   }
 
-  .select-btn {
-    margin-top: 6px;
+  .ingredient-board__text-wrapper textarea {
     width: 100%;
-    padding: 4px 0;
+    height: 100%;
+    padding: 12px;
     font-size: 14px;
-    background: #f5f5f5;
-    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: vertical;
+    overflow-y: auto;
+  }
+
+  .product-detail-range {
+    display: flex;
+    width: 100%;
+    gap: 2%;
+  }
+  .product-detail-block {
+  }
+  .product-detail-title {
+    border-radius: 5px;
+    background: #d6b59c;
+    color: #ffffff;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
+    justify-content: center;
+  }
+  .product-detail-title-left {
+    width: 30%;
+  }
+
+  .product-detail-title-right {
+    width: 68%;
+  }
+
+  .product-detail-editor {
+    background: #ffffff;
+  }
+  /* 刪除按鈕 */
+  .delete-btn {
+    position: absolute;
+    margin-left: 8px;
+    padding: 2px 6px;
+    font-size: 12px;
+    color: #fff;
+    background: #f56c6c;
+    border: none;
     border-radius: 4px;
     cursor: pointer;
 
     &:hover {
-      background: #eee;
+      background: #d43f3a;
     }
   }
-}
 
-.ingredient-board__text {
-  flex: 1;
-
-  textarea {
-    width: 100%;
-    height: 100%;
-    min-height: 400px;
-    padding: 12px;
-    font-size: 14px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    resize: vertical;
+  /* 上傳區 */
+  .upload-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
   }
-}
 
+  .upload-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 30px;
+  }
+
+  .preview {
+    position: relative;
+    display: inline-block;
+
+    img {
+      width: 150px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      display: block;
+    }
+  }
+
+  .import-btn-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+    margin-top: 30px;
+  }
+
+  .import-btn-wrapper button {
+    padding: 6px 12px;
+    margin-left: 10px;
+    border: 1px solid #d6b59c;
+    background: #fefbf1;
+    border-radius: 20px;
+    color: #d97c48;
+    cursor: pointer;
+
+    &:hover {
+      background: #d97c48;
+      color: #fefbf1;
+    }
+  }
+
+  /* Guide 區塊 header */
+  .ingredient-board__guide {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ingredient-board__guide-header {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 6px 6px 0 0;
+
+    .header-cell {
+      padding: 8px;
+      font-weight: bold;
+      text-align: center;
+      border-right: 1px solid #ddd;
+
+      &:last-child {
+        border-right: none;
+      }
+    }
+  }
+
+  /* 第二張表左右拆分 */
+  .ingredient-board__contents--split {
+    display: flex;
+    gap: 16px;
+    margin-top: 20px;
+    align-items: stretch;
+  }
+
+  /* 單張圖片區塊 */
+  .ingredient-board__image {
+    img {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+
+    .select-btn {
+      margin-top: 6px;
+      width: 100%;
+      padding: 4px 0;
+      font-size: 14px;
+      background: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &:hover {
+        background: #eee;
+      }
+    }
+  }
+
+  /* 主體區塊，左右排版 */
+  .ingredient-board__guide-body {
+    display: flex;
+    gap: 16px;
+    height: 600px;
+    border-radius: 0 0 6px 6px;
+    padding: 12px;
+
+    /* 左側圖片滾動區 */
+    .ingredient-board__images-wrapper {
+      width: 200px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .ingredient-board__images {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: none; /* 防止撐開父容器 */
+    }
+
+    /* 右側文字編輯區 */
+    .ingredient-board__text-wrapper {
+      flex: 1; /* 撐滿剩餘空間 */
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding-left: 0; /* 與左邊表格對齊 */
+    }
+
+    .ingredient-board__text-wrapper textarea {
+      width: 100%;
+      height: 100%;
+      padding: 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      resize: vertical;
+      overflow-y: auto;
+    }
+  }
+
+  /* 隱藏原本 el-table 的 body wrapper */
+  :deep(.el-table__body-wrapper) {
+    display: none;
+  }
 </style>

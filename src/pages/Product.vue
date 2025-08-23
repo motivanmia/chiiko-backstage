@@ -8,6 +8,8 @@
   import { ingredients } from '@/constants/ingredients.js';
   import switch_el from '@/components/Switch.vue';
 
+  const router = useRouter();
+
   // 原始資料
   const tableData = ref(
     ingredients.map((item) => ({
@@ -81,7 +83,7 @@
       v-model:searchText="searchText"
       :dropOptions="categoryOptions"
       :show-increase-button="true"
-      @increase-click="goProductDetail"
+      @create="goToDetail"
     />
   </div>
 
