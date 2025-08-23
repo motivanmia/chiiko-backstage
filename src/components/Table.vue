@@ -103,6 +103,14 @@
           <template v-if="scope.row.role === '超級管理員'">
             <span>{{ scope.row.status === 0 ? '正常' : '停權' }}</span>
           </template>
+
+          <template v-else-if="$slots.status">
+            <slot
+              name="status"
+              :row="scope.row"
+            />
+          </template>
+
           <template v-else>
             <switch_el
               v-model="scope.row[col.prop]"
