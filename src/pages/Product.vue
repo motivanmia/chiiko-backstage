@@ -8,6 +8,8 @@
   import { ingredients } from '@/constants/ingredients.js';
   import switch_el from '@/components/Switch.vue';
 
+  const router = useRouter();
+
   // 原始資料
   const tableData = ref(
     ingredients.map((item) => ({
@@ -20,8 +22,6 @@
       del: '',
     })),
   );
-
-  const router = useRouter();
 
   const categoryOptions = [
     { label: '已上架', value: 'on' },
@@ -66,6 +66,13 @@
     { prop: 'icon', label: '編輯', type: 'button-detail', width: 60 },
     { prop: 'del', label: '刪除', type: 'button-del', width: 60 },
   ]);
+
+  // const goToDetail = () => {
+  //   router.push({ name: 'ProductDetail' });
+  // };
+  const goToDetail = () => {
+    router.push({ name: 'ProductDetail', params: { id: 'new' } });
+  };
 </script>
 
 <template>
@@ -76,6 +83,7 @@
       v-model:searchText="searchText"
       :dropOptions="categoryOptions"
       :show-increase-button="true"
+      @create="goToDetail"
     />
   </div>
 

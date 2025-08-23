@@ -29,7 +29,7 @@
     },
   });
 
-  const emit = defineEmits(['update:searchOption', 'update:searchText', 'create']);
+  const emit = defineEmits(['update:searchOption', 'update:searchText', 'create', 'click']);
 
   const searchOption = computed({
     get: () => props.searchOption,
@@ -56,7 +56,12 @@
 
       <IncreaseButton
         v-if="showIncreaseButton"
-        @click="$emit('create')"
+        @click="
+          () => {
+            console.log('clicked');
+            $emit('create');
+          }
+        "
       />
     </div>
     <div class="the-header__wrap">
