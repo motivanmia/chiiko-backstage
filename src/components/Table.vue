@@ -100,7 +100,7 @@
 
         <!-- 狀態開關類型 -->
         <div v-else-if="col.type === 'status'">
-          <template v-if="scope.row.role === '超級管理員' && scope.row.manager_id == currentUserId">
+          <template v-if="scope.row.role === '超級管理員'">
             <span>{{ scope.row.status === 0 ? '正常' : '停權' }}</span>
           </template>
           <template v-else>
