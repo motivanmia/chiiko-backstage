@@ -21,8 +21,6 @@
     })),
   );
 
-  const router = useRouter();
-
   const categoryOptions = [
     { label: '已上架', value: 'on' },
     { label: '已下架', value: 'off' },
@@ -83,7 +81,7 @@
       v-model:searchText="searchText"
       :dropOptions="categoryOptions"
       :show-increase-button="true"
-      @increase-click="goToDetail"
+      @increase-click="goProductDetail"
     />
   </div>
 

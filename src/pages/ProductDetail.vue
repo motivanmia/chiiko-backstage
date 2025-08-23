@@ -66,12 +66,22 @@
       />
     </div>
 
-   <!-- 商品圖片 + 內文編輯區 -->
-<div class="ingredient-board__contents ingredient-board__guide">
-  <!-- 模擬表頭 -->
-  <div class="ingredient-board__guide-header">
-    <div class="header-cell">商品圖片</div>
-    <div class="header-cell">商品內文編輯</div>
+    <!-- 第二張表：拆成左右兩個 -->
+    <div class="ingredient-board__contents ingredient-board__contents--split">
+      <!-- 左邊：窄 -->
+      <Table
+        :table-data="leftTableData"
+        :columns="[{ prop: 'comparisonImage', label: '商品圖片', type: 'image', width: 300 }]"
+        style="flex: 1"
+      />
+
+      <!-- 右邊：寬 -->
+      <Table
+        :table-data="rightTableData"
+        :columns="[{ prop: 'preservationText', label: '商品編輯', width: 605 }]"
+        style="flex: 2"
+      />
+    </div>
   </div>
 
   <!-- 主體 -->
