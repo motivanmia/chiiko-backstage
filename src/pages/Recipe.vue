@@ -6,9 +6,8 @@
   import TheHeader from '@/components/common/TheHeader.vue';
   import axios from 'axios';
 
-  // --- script setup 區塊完全不需要修改 ---
-
   const isEditorModalVisible = ref(false);
+  const currentRecipeData = ref(null);
 
   const searchOption = ref([]);
   const searchText = ref('');
@@ -24,6 +23,7 @@
   ]);
   const tableData = ref([]);
 
+  // 撈取列表資料 (維持不變)
   onMounted(async () => {
     try {
       const res = await axios.get('http://localhost:8888/admin/recipe/list_recipes.php', {
@@ -43,6 +43,7 @@
     }
   });
 
+  // 刪除函式 (維持不變)
   const handleDeleteRecipe = async (row) => {
     const recipeId = row.number;
     const recipeName = row.name;
@@ -75,6 +76,36 @@
       console.error('API 刪除錯誤：', err);
       alert('刪除過程中發生網路或伺服器錯誤，請查看 console。');
     }
+  };
+
+  const handleViewDetails = async (row) => {
+    const recipeId = row.number;
+    try {
+      const res = await axios.get('http://localhost:8888/admin/recipe/fetch_recipe_details.php', {
+        params: { recipe_id: recipeId },
+        withCredentials: true,
+      });
+
+      if (res.data.status === 'success') {
+        currentRecipeData.value = res.data.data;
+        isEditorModalVisible.value = true;
+      } else {
+        alert(`獲取詳細資料失敗：${res.data.message}`);
+      }
+    } catch (err) {
+      console.error('API 獲取詳細資料錯誤：', err);
+      alert('獲取詳細資料時發生錯誤。');
+    }
+  };
+
+  const handleCreateNew = () => {
+    currentRecipeData.value = null; // 清空資料，進入新增模式
+    isEditorModalVisible.value = true;
+  };
+
+  const handleCloseModal = () => {
+    isEditorModalVisible.value = false;
+    currentRecipeData.value = null; // 清空資料
   };
 
   const optionsGenerator = (data) => {
@@ -118,27 +149,25 @@
 </script>
 
 <template>
-  <!-- 表頭 (維持不變) -->
   <TheHeader
     title="食譜管理"
     v-model:searchOption="searchOption"
     v-model:searchText="searchText"
     :dropOptions="dropOptions"
-    @create="isEditorModalVisible = true"
+    @create="handleCreateNew"
   />
 
-  <!-- 表格 -->
-  <!-- ✅ 【唯一的修改】將 @delete-row 改為 @del-click -->
   <Table
     :table-data="filterData"
     :columns="columns"
     @del-click="handleDeleteRecipe"
+    @button-click="handleViewDetails"
   />
 
-  <!-- 燈箱 (維持不變) -->
   <RecipeEditorModal
     v-if="isEditorModalVisible"
-    @close="isEditorModalVisible = false"
+    :initial-data="currentRecipeData"
+    @close="handleCloseModal"
   />
 </template>
 
