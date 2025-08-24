@@ -42,9 +42,6 @@
 
   const activeMenu = computed(() => {
     const name = route.name;
-
-    if (name === 'recipe') return '/recipe';
-    if (name === 'member') return '/member';
     if (name === 'order' || name === 'order-detail') return '/order';
 
     return route.path;
