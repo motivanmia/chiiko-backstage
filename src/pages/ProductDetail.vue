@@ -1,62 +1,83 @@
 <script setup>
   import 'element-plus/theme-chalk/el-cascader.css';
   import { ref, onMounted } from 'vue';
-  import { useRoute } from 'vue-router';
-
-  import TheHeader from '@/components/common/TheHeader.vue';
+  import { useRoute, useRouter } from 'vue-router';
+  import switch_el from "@/components/Switch.vue";
+  import TheDetailHeader from '@/components/common/TheDetailHeader.vue';
   import Table from '@/components/Table.vue';
   import { ingredients } from '@/constants/ingredients.js';
+  
 
   // 編輯器
   import { QuillEditor } from '@vueup/vue-quill';
 
   import '@vueup/vue-quill/dist/vue-quill.snow.css';
 
-  const route = useRoute();
+  import axios from 'axios';
+  const categories = ref([
+  { id: 1, name: '烤箱/氣炸鍋' },
+  { id: 2, name: '鍋鏟/鍋具' },
+  { id: 3, name: '刀具/砧板' },
+  { id: 4, name: '廚房小物' },
+]);
+function toUrlEncoded(obj) {
+  return Object.keys(obj)
+    .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]))
+    .join('&');
+}
+  const selectedCategory = ref("");
+  const API_BASE = import.meta.env.VITE_API_BASE;
 
-  /** —— 表頭定義 —— */
-  const ingredientInfoColumns = ref([
-    { prop: 'productId', label: '商品編號', width: 140 },
-    { prop: 'productCategory', label: '商品分類', width: 140 },
-    { prop: 'productImage', label: '商品預覽圖片', type: 'image' },
-    { prop: 'productName', label: '商品名稱', width: 200 },
-    { prop: 'productPrice', label: '單價', width: 100 },
-    { prop: 'productStatus', label: '商品狀態', type: 'status', width: 100 },
-  ]);
+  
+const isNew = ref(true)
+  const route = useRoute();
+  const router = useRouter();
+  const row = ref({
+  number: "P0000011",
+  status: true, // true=上架, false=下架
+});
+// 切換狀態的事件
+function updateStatus(number, newStatus) {
+  console.log("更新商品", number, "狀態：", newStatus);
+}
 
   /** —— 資料 —— */
-  const ingredientInfoData = ref([]); // 第一張表
   const productImages = ref([]); // 左側圖片
   const preservationText = ref(''); // 右側內文
-  const fileInput = ref(null);
   const textEditor = ref(null);
+  const selectedProduct = ref(null);
+  const productName = ref('');
+  const productPrice = ref('');
+  const productStatus = ref(true);
+  
 
   onMounted(() => {
-    const id = route.params.id;
-    const product = ingredients.find((p) => p.id === id);
-    if (!product) return;
+  const id = route.params.id;
+  const product = ingredients.find((p) => p.id === id); // 用你的商品陣列
+  if (!product) return;
 
-    // 商品基本資訊（第一張表）
-    ingredientInfoData.value = [
-      {
-        productId: product.id,
-        productCategory: product.category,
-        productImage: product.img?.[0] || '',
-        productName: product.name,
-        productPrice: product.price,
-        productStatus: product.status ?? '上架',
-      },
-    ];
+  // 把找到的商品資料暫存到 selectedProduct
+  selectedProduct.value = product;
 
-    // 左側圖片
-    productImages.value = product.img || [];
+  // 更新表格資料
+  ingredientInfoData.value = [
+    {
+      productId: product.id,
+      productCategory: product.category,
+      productImage: product.img?.[0] || '',
+      productName: product.name,
+      productPrice: product.price,
+      productStatus: product.status ?? '上架',
+    },
+  ];
 
-    // 右側內文
-    preservationText.value = product.preservation || '';
-  });
-  const triggerFileSelect = () => {
-    fileInput.value.click();
-  };
+  // 左側圖片
+  productImages.value = product.img || [];
+
+  // 右側內文
+  preservationText.value = product.preservation || '';
+});
+
   const handleFileSelect = (event) => {
     const files = event.target.files;
     if (!files.length) return;
@@ -80,51 +101,192 @@
     event.target.value = '';
   };
 
-  const uploadList = ref([
-    { img: null }, // 預設有一顆按鈕（img=null 表示還沒選檔案）
-  ]);
+const uploadList = ref([
+  { img: null, file: null }, // 新增 file 屬性
+]);
 
   // 點選檔案
-  const onSelectFile = (event, index) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) return;
+ const onSelectFile = (event, index) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      // 把圖塞進 uploadList 對應的位置
-      uploadList.value[index].img = e.target.result;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    uploadList.value[index].img = e.target.result; // 顯示用
+    uploadList.value[index].file = file;           // 真正上傳用
 
-      // 如果是最後一顆按鈕，選完後再新增一顆空的
-      if (index === uploadList.value.length - 1) {
-        uploadList.value.push({ img: null });
-      }
-    };
-    reader.readAsDataURL(file);
-
-    // 清掉 input.value，避免選同一張圖時不觸發
-    event.target.value = '';
+    // 如果是最後一顆按鈕，選完後再新增一顆空的
+    if (index === uploadList.value.length - 1) {
+      uploadList.value.push({ img: null, file: null });
+    }
   };
+  reader.readAsDataURL(file);
+
+  event.target.value = '';
+};
+
   const removeImage = (index) => {
     uploadList.value.splice(index, 1);
   };
+
+  async function onCreate() {
+  if (!productName.value || !selectedCategory.value || !productPrice.value) {
+    ElMessage.warning('請填寫完整商品資料');
+    return;
+  }
+  console.log(uploadList.value[0].file);
+  const formData = new FormData();
+  formData.append('name', productName.value);
+  formData.append('product_category_id', selectedCategory.value);
+  formData.append('unit_price', productPrice.value);
+  formData.append('is_active', productStatus.value ? 1 : 0);
+  formData.append('product_info', productStatus.value);
+  formData.append('product_notes', '12345');
+ // 先空值，不上傳圖片
+  formData.append('preview_image', new Blob([uploadList.value[0].file]), 'preview.png');
+  // formData.append('product_image[]', new Blob([]), '');
+  // formData.append('content_image[]', new Blob([]), '');
+
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_BASE}/product/post_product.php`,
+      formData,
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    console.log(res);
+    if (res.data.status === 'success') {
+      console.log(res)
+      ElMessage.success('商品新增成功');
+      router.push({ name: 'product' });
+    } else {
+      throw new Error(res.data.message || '新增失敗');
+    }
+  } catch (err) {
+    console.error(err);
+    ElMessage.error(err.message || '新增失敗');
+  }
+}
+
+  async function onSave() {
+    if (isNew.value) {
+      ElMessage.warning('目前為新增模式，請用「新增」按鈕');
+      return;
+    }
+
+    try {
+      // 1) 若有本地新圖，先上傳，rows 會被換成 server 檔名
+      await uploadImagesIfNeeded();
+
+      // 2) 新舊比較
+      const cur = buildPayload();
+      if (!cur.ingredient_id) throw new Error('缺少 ingredient_id');
+      const rawDiff = diffPayload(originalPayload.value, cur);
+
+      // 3) 沒變更就跳出
+      const keys = Object.keys(rawDiff).filter((k) => k !== 'ingredient_id');
+      if (keys.length === 0) {
+        ElMessage.info('沒有任何變更');
+        return;
+      }
+
+      // 4) 依後端鍵名轉換並送出
+      const patchBody = { ingredient_id: String(cur.ingredient_id) };
+      if ('category_id' in rawDiff) {
+        patchBody.ingredients_category_id = Number(rawDiff.category_id) || 0;
+      }
+      if ('name' in rawDiff) patchBody.name = rawDiff.name;
+      if ('status' in rawDiff) patchBody.status = String(rawDiff.status ?? '0');
+      if ('storage_method' in rawDiff) patchBody.storage_method = rawDiff.storage_method;
+      if ('images' in rawDiff) patchBody.image = rawDiff.images; // 後端期望 image
+      if ('content' in rawDiff) patchBody.content = rawDiff.content; // 有變才帶
+
+      const url = `${import.meta.env.VITE_API_BASE}/school/patch_ingredient.php`;
+      await requestPatch(url, patchBody);
+
+      // 5) 成功後更新快照
+      originalPayload.value = cur;
+      ElMessage.success('已更新');
+    } catch (e) {
+      console.error(e);
+      ElMessage.error(e.message || '更新失敗');
+    }
+  }
+
+  async function onCancel() {
+    router.push({ name: 'product' });
+  }
 </script>
 
 <template>
+  
   <div class="ingredient-board">
     <div class="ingredient-board__manage">
-      <TheHeader
-        title="商品編輯"
-        :show-increase-button="false"
+      <TheDetailHeader
+        title="商品管理"
+        @create="onCreate"
+        @save="onSave"
+        @cancel="onCancel"
+        :buttons="isNew ? ['create', 'cancel'] : ['save', 'cancel']"
       />
     </div>
 
     <!-- 第一張表格 -->
     <div class="ingredient-board__contents">
-      <Table
+      <table class="product-detail-table">
+        <thead>
+          <tr class="product-detail-tr">
+            <th class="product-detail-th-frist">商品編號</th>
+            <th>商品分類</th>
+            <th>商品瀏覽圖片</th>
+            <th>商品名稱</th>
+            <th>單價</th>
+            <th class="product-detail-th-last">商品狀態</th>
+          </tr>
+        </thead>
+        <tbody class="product-detail-tbody">
+          <tr>
+            <td>P0000011</td>
+            <td><el-select v-model="selectedCategory" placeholder="請選擇">
+  <el-option
+    v-for="c in categories"
+    :key="c.id"
+    :label="c.name"
+    :value="c.id"
+  />
+</el-select></td>
+            <td><img 
+                  v-if="uploadList[0]?.img" 
+                  :src="uploadList[0].img" 
+                  alt="商品圖片" 
+                  style="max-width: 100%; border-radius: 6px;" 
+              /></td>
+            <td><input v-model="productName"></input></td>
+            <td><div class="input-with-prefix">
+                    <span style="margin-right: 4px;">$</span>
+                    <input v-model="productPrice" type="text" style="width: 90px;" />
+                  </div>
+              </td>
+            <td> 
+              <switch_el
+                v-model="row.status"
+                yes="上架"
+                no="下架"
+                @toggle="(v) => updateStatus(row.number, v)"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- <Table
         :table-data="ingredientInfoData"
         :columns="ingredientInfoColumns"
-      />
+      /> -->
     </div>
 
     <!-- 第二張表：拆成左右兩個 -->
@@ -208,7 +370,7 @@
             :src="img"
             alt="商品圖片"
           />
-          <button class="select-btn">選擇擇定</button>
+          <!-- <button class="select-btn">選擇擇定</button> -->
         </div>
       </div>
     </div>
@@ -258,6 +420,77 @@
 
   .product-detail-editor {
     background: #ffffff;
+  }
+
+.product-detail-table {
+  width: 100%;
+  border-collapse: collapse;  /* 合併邊框 */
+  table-layout: fixed;        /* 固定列寬，保持對齊 */
+}
+
+.product-detail-table th,
+.product-detail-table td {
+  padding: 12px;
+  text-align: center;       /* 水平置中 */
+  vertical-align: middle;   /* 垂直置中 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;      /* 避免文字換行 */
+}
+
+.product-detail-th-frist {
+  border-top-left-radius: 5px;
+}
+
+.product-detail-th-last {
+  border-top-right-radius: 5px;
+}
+
+.product-detail-tbody td input,
+.product-detail-tbody td select,
+.product-detail-tbody td img {
+  width: 100%;
+  display: inline-block;    
+  vertical-align: middle;
+  max-height: 70px;         
+  border-radius: 8px;         
+  outline: none;          
+  background-color: #fff; 
+  box-shadow: none;    
+  border: 1px solid #ddd   
+}
+.product-detail-tbody td input,
+.product-detail-tbody td select {
+   padding: 6px 12px;         /* 上下10px、左右12px */
+  height: auto; 
+}
+
+  .product-detail-tr{
+    border-radius: 5px;
+    background: #d6b59c;
+    color: #ffffff;
+  }
+  .product-detail-tr th{
+    padding: 13px;
+  }
+  .product-detail-table th td{
+    vertical-align: middle;
+    align-items: center;
+  }
+  .product-detail-table {
+      width: 100%;
+      border-collapse: separate; /* 重要：要分離，不然 radius 不會生效 */
+      border-spacing: 0;
+      
+      overflow: hidden; /* 確保超出的圓角被裁掉 */
+  }
+  .product-detail-th-frist{
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+  }
+  .product-detail-th-last{
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
   }
   /* 刪除按鈕 */
   .delete-btn {
@@ -425,10 +658,5 @@
       resize: vertical;
       overflow-y: auto;
     }
-  }
-
-  /* 隱藏原本 el-table 的 body wrapper */
-  :deep(.el-table__body-wrapper) {
-    display: none;
   }
 </style>

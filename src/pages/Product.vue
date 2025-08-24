@@ -1,6 +1,7 @@
 <script setup>
   import 'element-plus/theme-chalk/el-cascader.css';
-  import { ref, computed } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
+  import axios from 'axios';
   import { useRouter } from 'vue-router';
 
   import Table from '@/components/Table.vue';
@@ -9,20 +10,28 @@
   import switch_el from '@/components/Switch.vue';
 
   const router = useRouter();
+  const API_BASE = import.meta.env.VITE_API_BASE;
+  const FILE_BASE = import.meta.env.VITE_FILE_URL;
+  const GetProductData = async () => {
+    const res = await axios.get(`${API_BASE}/product/get_product_detail.php`, {
+      withCredentials: true,
+    });
+    return JSON.parse(res.data.data);
+  };
 
   // 原始資料
-  const tableData = ref(
-    ingredients.map((item) => ({
-      number: item.id,
-      category: item.category, // e.g. 'vegetables' | 'meat'
-      name: item.name,
-      img: item.img?.[0] || '',
-      status: 'on',
-      icon: '',
-      del: '',
-    })),
-  );
+  const useMockData = false;
 
+  const tableData = ref([]);
+
+  onMounted(async () => {
+    try {
+      const products = await GetProductData();
+      tableData.value = products; // 直接灌進 ref
+    } catch (err) {
+      console.error('取得商品資料失敗', err);
+    }
+  });
   const categoryOptions = [
     { label: '已上架', value: 'on' },
     { label: '已下架', value: 'off' },
@@ -35,13 +44,21 @@
     const rawCat = searchOption.value;
     // console.log(rawCat);
 
-    const cat = typeof rawCat === 'array' && rawCat !== null ? rawCat.value : String(rawCat || '');
+    const cat = Array.isArray(rawCat) && rawCat !== null ? rawCat.value : String(rawCat || '');
+
     // console.log(cat);
 
     const kw = searchText.value.trim().toLowerCase();
 
     // 1) 先按分類（就算沒有關鍵字也要先篩）
     let rows = tableData.value;
+    console.log('Test');
+    rows.forEach((element) => {
+      if (!element.preview_image.includes('http')) {
+        element.preview_image = `${FILE_BASE}/${element.preview_image}`;
+        console.log(element);
+      }
+    });
     if (cat && cat !== 'all') {
       rows = rows.filter((r) => r.category === cat);
     }
@@ -57,10 +74,10 @@
 
   // 表格欄位
   const columns = ref([
-    { prop: 'number', label: '商品編號', width: 110 },
-    { prop: 'category', label: '商品分類', width: 110 },
-    { prop: 'img', label: '商品預覽圖片', type: 'image' },
-    { prop: 'name', label: '商品名稱', width: 200 },
+    { prop: 'product_id', label: '商品編號', width: 110 },
+    { prop: 'category_name', label: '商品分類', width: 110 },
+    { prop: 'preview_image', label: '商品預覽圖片', type: 'image' },
+    { prop: 'product_name', label: '商品名稱', width: 200 },
     { prop: 'price', label: '單價', width: 100 },
     { prop: 'status', label: '商品狀態', type: 'status', width: 140 },
     { prop: 'icon', label: '編輯', type: 'button-detail', width: 60 },
@@ -72,6 +89,35 @@
   // };
   const goToDetail = () => {
     router.push({ name: 'ProductDetail', params: { id: 'new' } });
+  };
+  const updateStatus = async (id, status) => {
+    try {
+      await axios.patch(`${API_BASE}/products/${id}`, { status });
+      const item = tableData.value.find((p) => p.number === id);
+      if (item) item.status = status;
+    } catch (err) {
+      console.error('更新狀態失敗', err);
+    }
+  };
+
+  const deleteProduct = async (row) => {
+    console.log(row);
+    if (!confirm(`確定刪除 ${row.name} 嗎？`)) return;
+    try {
+      const res = await axios.post(
+        `${API_BASE}/product/delete_product.php`,
+        { product_id: row.product_id }, // 一定要傳 product_id
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
+        },
+      );
+      console.log(res);
+      // 刪除成功後更新 tableData
+      tableData.value = tableData.value.filter((p) => p.product_id !== row.product_id);
+    } catch (err) {
+      console.error('刪除失敗', err.response?.data || err);
+    }
   };
 </script>
 
@@ -92,19 +138,24 @@
       :table-data="filteredTableData"
       :columns="columns"
       @button-click="goToDetail"
+      @del-click="deleteProduct"
     >
-      <template #status>
+      <template #img="{ row }">
+        <img
+          :src="row.preview_image"
+          alt="商品圖片"
+          class="product-img"
+        />
+      </template>
+      <template #status="{ row }">
         <switch_el
+          v-model="row.status"
           yes="上架"
           no="下架"
+          @toggle="(v) => updateStatus(row.number, v)"
         />
       </template>
-      <template #del>
-        <Icon
-          class="del-button"
-          icon-name="del"
-        />
-      </template>
+      <!-- 編輯按鈕 -->
       <template #icon="{ row }">
         <Icon @click="goToDetail(row)" />
       </template>
