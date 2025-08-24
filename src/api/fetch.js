@@ -40,75 +40,24 @@ export function patchMember(data) {
   });
 }
 
-// -------------以下舊的
-export function getCarts() {
+export function getOrders() {
   return request({
-    url: `${url.cart}/get_carts.php`,
+    url: `${url.order}/get_orders.php`,
     method: 'get',
   });
 }
 
-export function postCart(data) {
+export function getOrderItem(data) {
   return request({
-    url: `${url.cart}/post_cart.php`,
-    method: 'post',
-    data,
+    url: `${url.order}/get_order_items.php?order_id=${data.order_id}`,
+    method: 'get',
   });
 }
 
-export function patchCart(data) {
+export function patchOrder(data) {
   return request({
-    url: `${url.cart}/patch_cart.php`,
+    url: `${url.order}/patch_order.php`,
     method: 'patch',
     data,
-  });
-}
-
-export function deleteCart(data) {
-  return request({
-    url: `${url.cart}/delete_cart.php`,
-    method: 'delete',
-    data,
-  });
-}
-
-export function deleteCarts(data) {
-  return request({
-    url: `${url.cart}/delete_carts.php`,
-    method: 'delete',
-    data,
-  });
-}
-
-/**
- * 建立訂單 POST
- * @export
- * @param {String} postId 貼文ID
- * @param {Number} amt 金額
- * @param {String} description 商品說明
- * @return {Object} - HTTP request post
- */
-export function postCreateOrder({ postId, amt, description }) {
-  return request({
-    url: `${url.payment}/createOrder`,
-    method: 'post',
-    data: {
-      postId,
-      amt,
-      description,
-    },
-  });
-}
-
-/**
- * 取得訂單資訊 GET
- * @export
- * @param {String} orderId 訂單ID
- * @return {Object} - HTTP request get
- */
-export function getOrderInfo(orderId) {
-  return request({
-    url: `${url.payment}/getOrderInfo/${orderId}`,
-    method: 'get',
   });
 }

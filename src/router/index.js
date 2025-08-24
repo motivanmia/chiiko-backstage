@@ -46,7 +46,7 @@ const router = createRouter({
           meta: { requiresAuth: true }, // 🔑 需要登入
         },
         {
-          path: '/order-detail',
+          path: '/order-detail/:id',
           name: 'order-detail',
           component: () => import('@/pages/OrderDetail.vue'),
           meta: { requiresAuth: true }, // 🔑 需要登入

@@ -16,7 +16,7 @@
   });
 
   const all_MenuItems = [
-    { index: '/admin', title: '後台人員管理', role:0 },
+    { index: '/admin', title: '後台人員管理', role: 0 },
     { index: '/member', title: '會員資料查詢' },
     { index: '/recipe', title: '食譜管理' },
     { index: '/ingredient', title: '食材學堂管理' },
@@ -26,30 +26,26 @@
   ];
 
   const menuItems = computed(() => {
-  // 如果使用者未登入或沒有角色，則不顯示任何項目
-  if (!authStore.isLogin || authStore.user?.role === undefined) {
-    return [];
-  }
-  
-  // 超級管理員（role 0）可以看見所有選單項目
-  if (authStore.user.role === 0) {
-    return all_MenuItems;
-  }
+    // 如果使用者未登入或沒有角色，則不顯示任何項目
+    if (!authStore.isLogin || authStore.user?.role === undefined) {
+      return [];
+    }
 
-  // 其他管理員（例如 role 1）只能看見沒有設定 role 的選單項目
-  return all_MenuItems.filter(item => item.role === undefined);
-});
+    // 超級管理員（role 0）可以看見所有選單項目
+    if (authStore.user.role === 0) {
+      return all_MenuItems;
+    }
 
+    // 其他管理員（例如 role 1）只能看見沒有設定 role 的選單項目
+    return all_MenuItems.filter((item) => item.role === undefined);
+  });
 
   const activeMenu = computed(() => {
-    const path = route.path;
+    const name = route.name;
 
-    if (path === '/recipe') return '/recipe';
-
-    if (path === '/member') return '/member';
-
-    const orderPaths = ['/order', '/order-detail'];
-    if (orderPaths.includes(path)) return '/order';
+    if (name === 'recipe') return '/recipe';
+    if (name === 'member') return '/member';
+    if (name === 'order' || name === 'order-detail') return '/order';
 
     return path;
   });
@@ -63,9 +59,7 @@
 <template>
   <el-container class="layout-container">
     <el-aside>
-      <div
-        class="logo__link"
-      >
+      <div class="logo__link">
         <div class="logo__container">
           <div class="logo__pic">
             <img

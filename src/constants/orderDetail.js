@@ -1,9 +1,16 @@
+export const dropOptions = [
+  { value: '待確認', label: '待確認' },
+  { value: '已出貨', label: '已出貨' },
+  { value: '已完成', label: '已完成' },
+  { value: '取消/退貨', label: '取消/退貨' },
+];
+
 export const orderColumns = [
   { prop: 'order_id', label: '訂單編號' },
   { prop: 'member_id', label: '會員編號' },
   { prop: 'date', label: '訂單日期' },
   { prop: 'price', label: '金額' },
-  { prop: 'status', label: '訂單狀態', type: 'status' },
+  { prop: 'status', label: '訂單狀態', type: 'cascader', options: dropOptions },
 ];
 
 export const memberColumns = [
@@ -18,11 +25,4 @@ export const productColumns = [
   { prop: 'number', label: '數量' },
   { prop: 'uni_price', label: '單價' },
   { prop: 'price', label: '小計' },
-];
-
-export const dropOptions = [
-  { value: 'pending', label: '待確認' },
-  { value: 'shipped', label: '已出貨' },
-  { value: 'cancel', label: '取消' },
-  { value: 'completed', label: '已完成' },
 ];
