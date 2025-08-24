@@ -7,6 +7,7 @@
   import table_el from '@/components/Table.vue';
   import AddAdminModal from '@/components/users/AddAdminModal.vue';
   import { useAuthStore } from '@/stores/Auth';
+  import EditAdminModal from '@/components/users/EditAdminModal.vue';
 
   const authStore = useAuthStore();
   const apiBase = import.meta.env.VITE_API_BASE;
@@ -14,6 +15,22 @@
   const showSignin = ref(false); // 顯示新增成功提示
   const showError = ref(false); //新增錯誤提示訊息
   const errorMessage = ref('');
+
+  const isEditModalVisible = ref(false); // 控制編輯彈窗的顯示
+  const selectedAdminData = ref(null); // 儲存要編輯的管理員資料
+
+  const handleEditClick = (rowData) => {
+    selectedAdminData.value = rowData;
+    isEditModalVisible.value = true;
+  };
+
+  const handleEditSuccess = () => {
+    isEditModalVisible.value = false;
+    selectedAdminData.value = null;
+    handleMessage('管理員資料已更新！');
+    fetchAdminData();
+    authStore.checkSession();
+  };
 
   const signinSuccess = () => {
     showSignin.value = true;
@@ -135,7 +152,7 @@
     }
   };
 
-  const currentUserId = computed(() => authStore.user?.manager_id);
+  // const currentUserId = computed(() => authStore.user?.manager_id);
 </script>
 
 <template>
@@ -152,7 +169,16 @@
     @toggle-status="handleStatusToggle"
     :table-data="filterData"
     :columns="columns"
-    :currentUserId="currentUserId"
+
+    @edit-click="handleEditClick"
+  />
+  <EditAdminModal
+    v-if="isEditModalVisible && selectedAdminData"
+    :showEdit="isEditModalVisible"
+    :currentRow="selectedAdminData"
+    @close="isEditModalVisible = false"
+    @edit-success="handleEditSuccess"
+    @message="handleMessage"
   />
   <AddAdminModal
     v-if="isModalVisible"

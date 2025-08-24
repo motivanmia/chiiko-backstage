@@ -1,84 +1,125 @@
 <script setup>
   import table_el from '@/components/Table.vue';
-  import { ref } from 'vue';
+  import { ref, onMounted } from 'vue';
   import TheHeader from '@/components/common/TheHeader.vue';
+  import { getMember, patchMember } from '@/api/fetch';
+  import { useFilter } from '@/composables/useFilter';
+
+  // 訊息提示相關的 ref
+  const showError = ref(false);
+  const errorMessage = ref('');
 
   const columns = ref([
-    { prop: 'number', label: '會員編號', width: 200 },
+    { prop: 'user_id', label: '會員編號', width: 200 },
     { prop: 'name', label: '姓名', width: 200 },
-    { prop: 'text', label: '暱稱' },
-    { prop: 'email', label: 'E-mail' },
-    { prop: 'date', label: '加入日期' },
+    { prop: 'nickname', label: '暱稱' },
+    { prop: 'account', label: 'E-mail' },
+    { prop: 'created_at', label: '加入日期' },
     { prop: 'status', label: '會員狀態', type: 'status', width: 200 },
     { prop: 'icon', label: '詳細', type: 'button-detail', width: 100 },
   ]);
 
-  const categoryOptions = [
-    { label: '全部', value: 'all' },
-    { label: '正常', value: 'Active' },
-    { label: '停權', value: 'Disabled' },
-  ];
+  const handleMessage = (message) => {
+    showError.value = true;
+    errorMessage.value = message;
+    setTimeout(() => (showError.value = false), 2000);
+  };
 
-  const tableData = ref([
-    {
-      number: 'US001',
-      name: '王小明',
-      text: '花媽媽烹飪教室',
-      email: 'flower@gmail.com',
-      date: '2025-05-20',
-    },
-    {
-      number: 'US002',
-      name: '陳小華',
-      text: '花媽媽烹飪教室',
-      email: 'flower@gmail.com',
-      date: '2025-05-20',
-    },
-    {
-      number: 'US003',
-      name: '陳小華',
-      text: '花媽媽烹飪教室',
-      email: 'flower@gmail.com',
-      date: '2025-05-20',
-    },
-    {
-      number: 'US004',
-      name: '陳小華',
-      text: '花媽媽烹飪教室',
-      email: 'flower@gmail.com',
-      date: '2025-05-20',
-    },
-    {
-      number: 'US005',
-      name: '陳小華',
-      text: '花媽媽烹飪教室',
-      email: 'flower@gmail.com',
-      date: '2025-05-20',
-    },
-    {
-      number: 'US006',
-      name: '陳小華',
-      text: '花媽媽烹飪教室',
-      email: 'flower@gmail.com',
-      date: '2025-05-20',
-    },
-    {
-      number: 'US007',
-      name: '陳小華',
-      text: '花媽媽烹飪教室',
-      email: 'flower@gmail.com',
-      date: '2025-05-20',
-    },
-    {
-      number: 'US008',
-      name: '陳小華',
-      text: '花媽媽烹飪教室',
-      email: 'flower@gmail.com',
-      date: '2025-05-20',
-    },
-  ]);
+  const tableData = ref([]);
+  const searchOption = ref([]);
+  const searchText = ref('');
+
   const showDetail = ref(false);
   const currentRow = ref(null);
+
+  // 統一狀態的值
+  const memberStatus = (data) => {
+    return data.map((item) => {
+      // 檢查各種可能的正常狀態 (0, '0', false)
+      const isNormal = item.status === 0 || item.status === '0' || item.status === false;
+      const processedStatus = isNormal ? 0 : 1;
+      return {
+        ...item,
+        status: processedStatus,
+      };
+    });
+  };
+
+  // 引入api獲得會員資料
+  async function fetchData() {
+    try {
+      const response = await getMember();
+      if (response && response.data && response.data.status === 'success') {
+        tableData.value = memberStatus(response.data.data);
+      } else {
+        console.error('API 錯誤: 回傳資料格式不正確或為空');
+        handleMessage('無法載入會員資料。');
+      }
+    } catch (error) {
+      console.error('取得資料時發生錯誤:', error);
+      handleMessage('無法連接到伺服器。');
+    }
+  }
+
+  // 元件掛載後自動呼叫fetchData
+  onMounted(() => {
+    fetchData();
+  });
+
+  // 定義選項生成邏輯
+  const optionsGenerator = (data) => {
+    const uniqueStatuses = [...new Set(data.map((item) => item.status))];
+    return uniqueStatuses.map((status) => ({
+      label: status === 0 ? '正常' : '停權',
+      value: status,
+      children: [],
+    }));
+  };
+
+  // 使用composable生成選項
+  const { dropOptions, filterData } = useFilter(
+    tableData,
+    searchOption,
+    searchText,
+    optionsGenerator,
+    'status',
+    undefined,
+  );
+
+  // 狀態切換
+  const handleStatusToggle = async ({ rowData, newStatus }) => {
+    const item = tableData.value.find((item) => item.user_id === rowData.user_id);
+
+    if (!item) return;
+    // 修改前端資料
+    item.status = newStatus;
+
+    try {
+      // 引入api
+      const response = await patchMember({
+        user_id: item.user_id,
+        status: newStatus,
+      });
+
+      // 檢查api回傳的狀態
+      if (response.data.status === 'success') {
+        handleMessage(response.data.message || '狀態更新成功！');
+      } else {
+        // api回傳失敗狀態
+        item.status = originalStatus;
+        handleMessage(response.data.message || '狀態更新失敗。');
+      }
+    } catch (error) {
+      console.error('更新資料時發生錯誤:', error);
+      // 錯誤時將狀態回復並顯示訊息
+      if (item) item.status = originalStatus;
+      if (error.response && error.response.data) {
+        handleMessage(error.response.data.message);
+      } else {
+        handleMessage('無法連接到伺服器。');
+      }
+    }
+  };
 
   // 開啟 / 關閉
   function openDetail(row) {
@@ -97,13 +138,16 @@
 <template>
   <TheHeader
     title="會員管理"
-    :dropOptions="categoryOptions"
     v-model:searchOption="searchOption"
     v-model:searchText="searchText"
+    :dropOptions="dropOptions"
     :show-increase-button="false"
   />
   <table_el
-    :table-data="tableData"
+    yes="正常"
+    no="停權"
+    @toggle-status="handleStatusToggle"
+    :table-data="filterData"
     :columns="columns"
     @button-click="openDetail"
   />
@@ -122,7 +166,7 @@
         >
           <div class="row">
             會員編號：
-            <span>{{ currentRow.number }}</span>
+            <span>{{ currentRow.user_id }}</span>
           </div>
           <div class="row">
             姓名：
@@ -130,27 +174,27 @@
           </div>
           <div class="row">
             暱稱：
-            <span>{{ currentRow.text }}</span>
+            <span>{{ currentRow.nickname }}</span>
           </div>
           <div class="row">
             Email：
-            <span>{{ currentRow.email }}</span>
+            <span>{{ currentRow.account }}</span>
           </div>
           <div class="row">
             電話：
-            <span>{{}}</span>
+            <span>{{ currentRow.phone }}</span>
           </div>
           <div class="row">
             地址：
-            <span>{{}}</span>
+            <span>{{ currentRow.address }}</span>
           </div>
           <div class="row">
             加入日期：
-            <span>{{ currentRow.date }}</span>
+            <span>{{ currentRow.created_at }}</span>
           </div>
           <div class="row">
             會員狀態：
-            <span>{{ currentRow.status }}</span>
+            <span>{{ currentRow.status === 0 ? '正常' : '停權' }}</span>
           </div>
         </div>
 
@@ -214,7 +258,7 @@
     border-bottom: 1px solid#d6b59c;
     margin-top: 5px;
   }
-  .answer{
+  .answer {
     margin-top: 10px;
     padding-left: 20px;
   }
