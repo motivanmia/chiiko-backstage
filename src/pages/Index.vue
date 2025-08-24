@@ -47,7 +47,7 @@
     if (name === 'member') return '/member';
     if (name === 'order' || name === 'order-detail') return '/order';
 
-    return path;
+    return route.path;
   });
 
   async function handleLogout() {
