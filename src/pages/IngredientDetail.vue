@@ -7,6 +7,10 @@
   import TheDetailHeader from '@/components/common/TheDetailHeader.vue';
   import { useIngredientStore } from '@/stores/Ingredient';
   import { useIngredientCategoryStore } from '@/stores/IngredientCategory';
+  import { useToastStore } from '@/stores/Toast';
+
+  const toastStore = useToastStore();
+  const { showToast } = toastStore;
 
   const route = useRoute();
   const router = useRouter();
@@ -207,9 +211,7 @@
 
     // 3) 純字串
     if (typeof v === 'string') {
-      // dataURL 無法取到原始檔名，只能回空或你自定預設
       if (v.startsWith('data:')) return '';
-      // blob: 沒檔名；但若同時存了 {name}，上面已處理；這裡還是回空避免錯誤
       if (v.startsWith('blob:')) return '';
       const clean = v.split('#')[0].split('?')[0];
       return clean.split('/').pop() || '';
@@ -221,10 +223,10 @@
   function filenameFromRow(row, prop) {
     if (!row) return '';
     const meta = row?.[`${prop}Meta`];
-    if (meta?.name) return String(meta.name); // 最優先：ImageCell select 傳回的檔名
+    if (meta?.name) return String(meta.name);
 
     const v = row?.[prop];
-    return toFilename(v); // 退而求其次：從字串或 {url, filename} 猜
+    return toFilename(v);
   }
 
   function buildPayload() {
@@ -257,7 +259,7 @@
       status: String(info.ingredientStatus ?? '0'),
       storage_method: String(rows[0]?.preservationText ?? ''),
       content,
-      images: [goodImageName, badImageName], // ← 現在是「檔名」陣列
+      images: [goodImageName, badImageName],
     };
   }
 
@@ -279,13 +281,11 @@
       needUpload.push({ slot: 'bad', file: badMeta.file });
     }
 
-    if (!needUpload.length) return null; // 不需上傳
+    if (!needUpload.length) return null;
 
     const form = new FormData();
-    // 後端以 files[] 接收（可多檔）
     needUpload.forEach(({ file }) => form.append('files[]', file));
 
-    // 讓瀏覽器自動帶 boundary
     const res = await fetch(`${import.meta.env.VITE_API_BASE}/school/upload_image.php`, {
       method: 'POST',
       body: form,
@@ -304,10 +304,10 @@
     let idx = 0;
     if (goodMeta?.source === 'local' && uploaded[idx]) {
       const u = uploaded[idx++];
-      rows[0].comparisonImage = u.url; // 視覺上也可換成正式 URL
+      rows[0].comparisonImage = u.url;
       rows[0].comparisonImageMeta = {
         ...(rows[0].comparisonImageMeta || {}),
-        name: u.filename, // 之後 buildPayload 用這個檔名
+        name: u.filename,
         url: u.url,
         source: 'server',
       };
@@ -326,14 +326,14 @@
     return uploaded;
   }
   function diffPayload(orig, cur) {
-    if (!orig) return { ...cur }; // 沒快照就當作全量
+    if (!orig) return { ...cur };
     const diff = {};
     const pick = (k) => {
       if (orig[k] !== cur[k]) diff[k] = cur[k];
     };
 
     // 單值欄位
-    pick('ingredient_id'); // 一定要帶，用來鎖定更新對象
+    pick('ingredient_id');
     pick('name');
     pick('category_id');
     pick('status');
@@ -412,7 +412,7 @@
       const data = JSON.parse(raw);
       if (data.status !== 'success') throw new Error(data.message || '新增失敗');
 
-      ElMessage.success('已新增');
+      showToast('已新增');
       router.push({ name: 'ingredient' });
     } catch (e) {
       console.error(e);
@@ -457,10 +457,10 @@
 
       // 5) 成功後更新快照
       originalPayload.value = cur;
-      ElMessage.success('已更新');
+      showToast('已更新');
     } catch (e) {
       console.error(e);
-      ElMessage.error(e.message || '更新失敗');
+      showToast(e.message || '更新失敗');
     }
   }
 

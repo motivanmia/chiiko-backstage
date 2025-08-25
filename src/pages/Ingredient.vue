@@ -9,6 +9,10 @@
   import { useIngredientCategoryStore } from '@/stores/IngredientCategory';
   const ingredient = useIngredientStore();
   const categoryStore = useIngredientCategoryStore();
+  import { useToastStore } from '@/stores/Toast';
+
+  const toastStore = useToastStore();
+  const { showToast } = toastStore;
 
   import switch_el from '@/components/Switch.vue';
   import Icon from '@/components/common/Icon.vue';
@@ -122,7 +126,7 @@
         }),
       });
       const raw = await res.text();
-      ElMessage.success('狀態更新成功');
+      showToast('狀態更新成功');
       if (!res.ok) throw new Error(raw.slice(0, 200));
       const data = JSON.parse(raw);
       if (data.status !== 'success') throw new Error(data.message || '狀態更新失敗');
