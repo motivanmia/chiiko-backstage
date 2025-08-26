@@ -10,26 +10,26 @@
 
         <div class="modal-body">
           <!-- =================== 通知詳情 (Notification) =================== -->
-          <!-- ✨ 關鍵修正：移除了多餘的 .notification 和 .report 前綴 -->
           <div v-if="type === 'notification'">
             <div class="info-row">
               <label>通知編號</label>
-              <p>{{ data.notification_id }}</p>
+              <!-- ✅ 修正：確保 data 存在 -->
+              <p>{{ data.notification_id || 'N/A' }}</p>
             </div>
             <hr />
             <div class="info-row">
               <label>發送日期</label>
-              <p>{{ data.sent_date }}</p>
+              <p>{{ data.sent_date || 'N/A' }}</p>
             </div>
             <hr />
             <div class="info-row">
               <label>通知類型</label>
-              <p>{{ data.notification_type }}</p>
+              <p>{{ data.notification_type || 'N/A' }}</p>
             </div>
             <hr />
             <div class="info-row">
               <label>接收會員</label>
-              <p>{{ data.recipient_id }}</p>
+              <p>{{ data.recipient_id || 'N/A' }}</p>
             </div>
             <hr />
             <div class="info-row">
@@ -39,7 +39,7 @@
             <hr />
             <div class="info-row">
               <label>通知內容</label>
-              <p class="comment-content">{{ data.content }}</p>
+              <p class="comment-content">{{ data.content || '無' }}</p>
             </div>
           </div>
 
@@ -47,27 +47,28 @@
           <div v-else-if="type === 'report'">
             <div class="info-row">
               <label>檢舉日期</label>
-              <p>{{ data.report_date }}</p>
+              <!-- ✅ 修正：使用後端原始欄位 report_date -->
+              <p>{{ data.report_date || 'N/A' }}</p>
             </div>
             <hr />
             <div class="info-row">
               <label>檢舉會員編號</label>
-              <p>{{ data.reporter_id }}</p>
+              <p>{{ data.reporter_user_id ? `U${data.reporter_user_id}` : 'N/A' }}</p>
             </div>
             <hr />
             <div class="info-row">
               <label>檢舉類型</label>
-              <p>{{ data.report_category }}</p>
+              <p>{{ mapReportType(data.report_type) }}</p>
             </div>
             <hr />
             <div class="info-row">
               <label>留言會員編號</label>
-              <p>{{ data.offender_id }}</p>
+              <p>{{ data.offender_user_id ? `U${data.offender_user_id}` : 'N/A' }}</p>
             </div>
             <hr />
             <div class="info-row">
               <label>留言內容</label>
-              <p class="comment-content">{{ data.comment_content }}</p>
+              <p class="comment-content">{{ data.comment_content || '無' }}</p>
             </div>
             <hr />
             <div class="info-row status-row">
@@ -103,7 +104,7 @@
               取消
             </button>
           </template>
-          <template v-if="type === 'notification'">
+          <template v-else>
             <button
               class="btn btn-cancel"
               @click="$emit('close')"
@@ -118,49 +119,71 @@
 </template>
 
 <script setup>
-  import { ref, watch } from 'vue';
+  import { ref, watch, computed } from 'vue';
 
   const props = defineProps({
     show: { type: Boolean, required: true },
-    type: {
-      type: String,
-      required: true,
-      validator: (value) => ['report', 'notification'].includes(value),
-    },
+    type: { type: String, required: true },
     title: { type: String, default: '詳細資訊' },
     data: { type: Object, default: () => ({}) },
   });
 
   const emit = defineEmits(['close', 'save']);
 
-  // --- 只給「檢舉」類型用的邏輯 ---
-  const statusOptions = ref([
-    { value: 'pending', label: '待確認' },
-    { value: 'removed', label: '已下架' },
-    { value: 'reinstated', label: '已恢復' },
-  ]);
+  const localStatus = ref(0);
 
-  const localStatus = ref('');
-
+  // 監聽資料變化，設定預設值
   watch(
     () => props.data,
     (newData) => {
-      if (props.type === 'report' && newData) {
-        const foundOption = statusOptions.value.find((option) => option.label === newData.status);
-
-        if (foundOption) {
-          localStatus.value = foundOption.value;
-        } else {
-          localStatus.value = 'pending';
-        }
+      if (props.type === 'report' && newData && typeof newData.status !== 'undefined') {
+        localStatus.value = newData.status;
       }
     },
     { immediate: true, deep: true },
   );
 
+  // --- 動態產生選項 ---
+  // 根據當前狀態決定下拉選單顯示哪些
+  const statusOptions = computed(() => {
+    if (props.type !== 'report') return [];
+
+    switch (props.data.status) {
+      case 0: // 待處理
+        return [
+          { value: 0, label: '待處理' },
+          { value: 1, label: '已下架' },
+          { value: 2, label: '已恢復' },
+        ];
+      case 1: // 已下架
+        return [
+          { value: 1, label: '已下架' },
+          { value: 2, label: '已恢復' },
+        ];
+      case 2: // 已恢復
+        return [
+          { value: 2, label: '已恢復' },
+          { value: 1, label: '已下架' },
+        ];
+      default:
+        return [];
+    }
+  });
+
+  // 儲存按鈕事件
   function handleSave() {
-    const id = props.type === 'report' ? props.data.number : props.data.notification_id;
-    emit('save', { id: id, newStatus: localStatus.value });
+    const id = props.type === 'report' ? props.data.report_id : props.data.notification_id;
+    if (id) {
+      emit('save', { id: id, newStatus: localStatus.value });
+    } else {
+      console.error('儲存失敗：找不到對應的 ID。', props.data);
+    }
+  }
+
+  // --- Helper 函式 ---
+  function mapReportType(type) {
+    const types = { 1: '仇恨言論', 2: '謾罵和騷擾', 3: '暴力言論', 4: '侵犯隱私', 5: '垃圾內容' };
+    return types[type] || '未知';
   }
 </script>
 
