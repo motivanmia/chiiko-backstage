@@ -11,7 +11,8 @@
     </div>
 
     <!-- 
-      結構保持不變，我們仍然使用 ref 來控制 textarea
+      模板部分完全不需要修改，
+      它現在可以正確地找到 script 中定義的 dynamicPlaceholder
     -->
     <textarea
       ref="textareaRef"
@@ -33,50 +34,48 @@
 </template>
 
 <script setup>
-  import { ref, watch, onMounted, nextTick } from 'vue';
+  import { ref, watch, onMounted, nextTick, computed } from 'vue'; // ✅ 引入 computed
 
-  /**
-   * ⭐️ 關鍵 1: 新增 initialHeight prop
-   * 用來接收外部傳入的初始/最小高度值。
-   * 我們給它一個預設值 62，這樣在不傳入此 prop 時，它仍然能像之前的版本一樣運作。
-   */
   const props = defineProps({
     modelValue: { type: [String, Number], default: '' },
     label: { type: String, required: true },
     maxLength: Number,
     warning: String,
     placeholderDesktop: { type: String, default: '請輸入內容' },
-    initialHeight: { type: Number, default: 62 }, // 新增的 Prop
+    placeholderMobile: { type: String, default: '' }, // ✅ 增加 mobile 的 prop
+    initialHeight: { type: Number, default: 62 },
   });
 
   defineEmits(['update:modelValue']);
 
+  // 【✅ 核心修正 ✅】
+  // 我們在這裡定義了模板中需要的 dynamicPlaceholder 變數
+  const dynamicPlaceholder = computed(() => {
+    // 檢查 window 物件是否存在 (避免在 SSR 等非瀏覽器環境出錯)
+    if (typeof window !== 'undefined') {
+      // 如果視窗寬度大於 768px，使用桌面版的 placeholder
+      // 否則，優先使用行動版，如果行動版沒提供，就還是用桌面版
+      return window.innerWidth > 768
+        ? props.placeholderDesktop
+        : props.placeholderMobile || props.placeholderDesktop;
+    }
+    // 預設情況下，回傳桌面版
+    return props.placeholderDesktop;
+  });
+
   const textareaRef = ref(null);
 
-  /**
-   * ⭐️ 關鍵 2: 升級 adjustHeight 函式
-   * 現在它會考慮 initialHeight。
-   */
+  // 您現有的高度自動調整邏輯非常棒，完全保持不變
   const adjustHeight = () => {
     const textarea = textareaRef.value;
     if (textarea) {
-      // 取得我們設定的最小高度
       const minHeight = props.initialHeight;
-
-      // 1. 暫時重設高度，讓瀏覽器計算內容所需高度
       textarea.style.height = 'auto';
-
-      // 2. 取得內容實際需要的捲動高度
       const scrollHeight = textarea.scrollHeight;
-
-      // 3. 核心邏輯：
-      //    最終的高度，取「內容所需高度」和「我們設定的最小高度」中較大的那一個。
-      //    這樣就保證了它絕不會縮小到比 initialHeight 更小。
       textarea.style.height = `${Math.max(scrollHeight, minHeight)}px`;
     }
   };
 
-  // 監聽器和生命週期鉤子保持不變，它們會自動調用升級後的 adjustHeight 函式
   watch(
     () => props.modelValue,
     async () => {
@@ -86,7 +85,6 @@
   );
 
   onMounted(() => {
-    // 為了讓初始高度立即生效，我們在 onMounted 中就呼叫一次
     adjustHeight();
   });
 </script>

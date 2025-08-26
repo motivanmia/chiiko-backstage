@@ -4,82 +4,109 @@
     @dragover.prevent
     @drop.prevent="handleDrop"
   >
-    <!-- 為了更好的使用者體驗，我們將點擊事件加在整個預覽圖上 -->
-    <label
-      for="file-input"
-      class="image-preview-label"
+    <!-- 
+      【✅ 核心修正 ✅】
+      現在有三種顯示狀態
+    -->
+
+    <!-- 狀態一：審核模式 (有初始圖片，且使用者未選擇新圖) -->
+    <div
+      v-if="initialImageUrl && !previewUrl"
+      class="image-container"
     >
       <img
-        v-if="previewUrl"
-        :src="previewUrl"
+        :src="initialImageUrl"
+        alt="食譜圖片"
         class="image-preview"
       />
-      <!-- 新增一個預設的 placeholder 狀態 -->
-      <div
-        v-else
-        class="placeholder-content"
-      ></div>
-    </label>
-
-    <!-- 將按鈕放在外部，或者您可以將它完全移除，讓使用者直接點擊預覽區 -->
-    <div class="upload-button-container">
+      <!-- 在審核模式下，可以選擇不顯示任何按鈕，或者顯示一個不可點擊的提示 -->
+      <!-- 如果您的 .is-review-readonly CSS 作用於此，按鈕會自動禁用 -->
       <BaseButton
         @click="triggerFile"
-        class="upload-button-override"
+        class="change-button-override"
       >
-        選擇食譜圖片
+        更換圖片
       </BaseButton>
     </div>
 
-    <!-- 真正用來選擇檔案的 input 元素，保持隱藏 -->
+    <!-- 狀態二：新增/編輯模式 (使用者已選擇新圖) -->
+    <div
+      v-else-if="previewUrl"
+      class="image-container"
+    >
+      <img
+        :src="previewUrl"
+        alt="新圖片預覽"
+        class="image-preview"
+      />
+      <BaseButton
+        @click="removeImage"
+        variant="secondary"
+        class="remove-button-override"
+      >
+        移除
+      </BaseButton>
+    </div>
+
+    <!-- 狀態三：新增/編輯模式 (還未選圖) -->
+    <div
+      v-else
+      class="placeholder-content"
+      @click="triggerFile"
+    >
+      <BaseButton class="upload-button-override">選擇食譜圖片</BaseButton>
+    </div>
+
     <input
       type="file"
       ref="fileInput"
-      id="file-input"
-      accept="image/*"
-      class="file-input"
       @change="handleFileChange"
+      accept="image/*"
+      style="display: none"
     />
   </div>
 </template>
 
 <script setup>
-  import { ref } from 'vue';
+  import { ref, watch } from 'vue';
   import BaseButton from '@/components/common/BaseButton.vue';
 
-  // ⭐️ 核心修改 1: 宣告這個元件會發出一個叫做 `update:file` 的事件
-  const emit = defineEmits(['update:file']);
+  const props = defineProps({
+    modelValue: { type: File, default: null }, // v-model:file
+    initialImageUrl: { type: String, default: null },
+  });
 
-  const previewUrl = ref('');
+  const emit = defineEmits(['update:modelValue']);
+
+  const previewUrl = ref(null);
   const fileInput = ref(null);
 
-  // 當使用者點擊「選擇圖片」按鈕時，觸發隱藏的 input 點擊事件
+  // 當父層傳來的 initialImageUrl 變化時，清空本地的預覽
+  watch(
+    () => props.initialImageUrl,
+    () => {
+      previewUrl.value = null;
+    },
+    { immediate: true },
+  );
+
   const triggerFile = () => fileInput.value?.click();
 
-  // 統一處理檔案更新的函式
   const processFile = (file) => {
-    // 驗證是否有檔案，以及檔案是否為圖片類型
     if (file && file.type.startsWith('image/')) {
-      // 產生一個暫時的 URL，用來在畫面上預覽圖片
       previewUrl.value = URL.createObjectURL(file);
-
-      // ⭐️ 核心修改 2: 【最關鍵的一步】
-      //    觸發 'update:file' 事件，並將使用者選擇的檔案物件 (file)
-      //    當作「包裹」一起發送給父層 (RecipeEditPage.vue)
-      emit('update:file', file);
-    } else {
-      // 如果選擇的不是圖片或取消選擇，就清空
-      previewUrl.value = '';
-      emit('update:file', null);
-      alert('請選擇有效的圖片檔案 (jpg, png, gif)。');
+      emit('update:modelValue', file);
     }
   };
 
-  // 當使用者透過「點擊」選擇檔案時觸發
   const handleFileChange = (e) => processFile(e.target.files[0]);
-
-  // 當使用者透過「拖曳」放入檔案時觸發
   const handleDrop = (e) => processFile(e.dataTransfer.files[0]);
+
+  function removeImage() {
+    previewUrl.value = null;
+    emit('update:modelValue', null);
+    if (fileInput.value) fileInput.value.value = '';
+  }
 </script>
 
 <style lang="scss" scoped>

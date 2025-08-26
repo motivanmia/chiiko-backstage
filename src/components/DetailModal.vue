@@ -6,14 +6,13 @@
       @click.self="$emit('close')"
     >
       <div class="modal-container">
-        <h2 class="modal-header">{{ title }}</h2>
+        <h2 class="modal-header">{{ dynamicTitle }}</h2>
 
         <div class="modal-body">
           <!-- =================== 通知詳情 (Notification) =================== -->
           <div v-if="type === 'notification'">
             <div class="info-row">
               <label>通知編號</label>
-              <!-- ✅ 修正：確保 data 存在 -->
               <p>{{ data.notification_id || 'N/A' }}</p>
             </div>
             <hr />
@@ -39,7 +38,7 @@
             <hr />
             <div class="info-row">
               <label>通知內容</label>
-              <p class="comment-content">{{ data.content || '無' }}</p>
+              <p class="content-text">{{ data.content || '無' }}</p>
             </div>
           </div>
 
@@ -47,7 +46,6 @@
           <div v-else-if="type === 'report'">
             <div class="info-row">
               <label>檢舉日期</label>
-              <!-- ✅ 修正：使用後端原始欄位 report_date -->
               <p>{{ data.report_date || 'N/A' }}</p>
             </div>
             <hr />
@@ -68,7 +66,7 @@
             <hr />
             <div class="info-row">
               <label>留言內容</label>
-              <p class="comment-content">{{ data.comment_content || '無' }}</p>
+              <p class="content-text">{{ data.comment_content || '無' }}</p>
             </div>
             <hr />
             <div class="info-row status-row">
@@ -78,7 +76,7 @@
                 class="status-select"
               >
                 <option
-                  v-for="option in statusOptions"
+                  v-for="option in reportStatusOptions"
                   :key="option.value"
                   :value="option.value"
                 >
@@ -87,30 +85,134 @@
               </select>
             </div>
           </div>
+
+          <!-- =================== 食譜詳情 (Recipe) =================== -->
+          <div v-else-if="type === 'recipe'">
+            <div
+              v-if="data && data.recipe"
+              class="recipe-details"
+            >
+              <div class="info-row image-row">
+                <label>食譜圖片</label>
+                <img
+                  v-if="data.recipe.image"
+                  :src="data.recipe.image"
+                  alt="食譜圖片"
+                  class="detail-image"
+                />
+                <p v-else>無圖片</p>
+              </div>
+              <hr />
+              <div class="info-row">
+                <label>食譜編號</label>
+                <p>{{ data.recipe.recipe_id || 'N/A' }}</p>
+              </div>
+              <hr />
+              <div class="info-row">
+                <label>作者</label>
+                <p>{{ data.recipe.author_name || 'N/A' }}</p>
+              </div>
+              <hr />
+              <div class="info-row">
+                <label>食譜分類</label>
+                <p>{{ data.recipe.category_name || 'N/A' }}</p>
+              </div>
+              <hr />
+              <div class="info-row">
+                <label>新增日期</label>
+                <p>{{ data.recipe.created_at || 'N/A' }}</p>
+              </div>
+              <hr />
+              <div class="info-row-flex">
+                <div class="info-item">
+                  <label>烹飪時間</label>
+                  <p>{{ data.recipe.cooked_time || 'N/A' }} 分鐘</p>
+                </div>
+                <div class="info-item">
+                  <label>料理份數</label>
+                  <p>{{ data.recipe.serving || 'N/A' }} 人份</p>
+                </div>
+              </div>
+              <hr />
+              <div class="info-row">
+                <label>食譜標籤</label>
+                <p>{{ data.recipe.tag || '無' }}</p>
+              </div>
+              <hr />
+              <div class="info-row">
+                <label>內文</label>
+                <p class="content-text">{{ data.recipe.content || '無' }}</p>
+              </div>
+              <hr />
+              <div
+                class="info-row"
+                v-if="data.ingredients && data.ingredients.length > 0"
+              >
+                <label>所需食材</label>
+                <ul class="item-list">
+                  <li
+                    v-for="(item, index) in data.ingredients"
+                    :key="`ing-${index}`"
+                  >
+                    <span>{{ item.name }}</span>
+                    <span>{{ item.serving }}</span>
+                  </li>
+                </ul>
+              </div>
+              <hr v-if="data.ingredients && data.ingredients.length > 0" />
+              <div
+                class="info-row"
+                v-if="data.steps && data.steps.length > 0"
+              >
+                <label>料理步驟</label>
+                <ol class="item-list">
+                  <li
+                    v-for="step in data.steps"
+                    :key="`step-${step.step_id}`"
+                  >
+                    {{ step.content }}
+                  </li>
+                </ol>
+              </div>
+              <hr />
+              <div class="info-row status-row">
+                <label>食譜狀態</label>
+                <select
+                  v-model="localStatus"
+                  class="status-select"
+                >
+                  <option
+                    v-for="option in recipeStatusOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div v-else><p>無法載入食譜詳細資料。</p></div>
+          </div>
         </div>
 
         <div class="action-buttons">
+          <TheButton
+            @click="$emit('close')"
+            type="cancel"
+            :text="type === 'report' ? '取消' : '關閉'"
+          />
+
           <template v-if="type === 'report'">
-            <button
-              class="btn btn-save"
+            <TheButton
               @click="handleSave"
-            >
-              儲存
-            </button>
-            <button
-              class="btn btn-cancel"
-              @click="$emit('close')"
-            >
-              取消
-            </button>
+              text="儲存"
+            />
           </template>
-          <template v-else>
-            <button
-              class="btn btn-cancel"
-              @click="$emit('close')"
-            >
-              關閉
-            </button>
+          <template v-else-if="type === 'recipe'">
+            <TheButton
+              @click="handleSave"
+              text="確定"
+            />
           </template>
         </div>
       </div>
@@ -120,49 +222,48 @@
 
 <script setup>
   import { ref, watch, computed } from 'vue';
+  import TheButton from '@/components/common/TheButton.vue';
 
   const props = defineProps({
     show: { type: Boolean, required: true },
-    type: { type: String, required: true },
+    type: {
+      type: String,
+      required: true,
+      validator: (value) => ['report', 'notification', 'recipe'].includes(value),
+    },
     title: { type: String, default: '詳細資訊' },
     data: { type: Object, default: () => ({}) },
   });
 
   const emit = defineEmits(['close', 'save']);
 
-  const localStatus = ref(0);
+  const dynamicTitle = computed(() => {
+    if (props.type === 'recipe' && props.data?.recipe?.name) {
+      return props.data.recipe.name;
+    }
+    return props.title;
+  });
 
-  // 監聽資料變化，設定預設值
-  watch(
-    () => props.data,
-    (newData) => {
-      if (props.type === 'report' && newData && typeof newData.status !== 'undefined') {
-        localStatus.value = newData.status;
-      }
-    },
-    { immediate: true, deep: true },
-  );
+  const localStatus = ref(null);
 
-  // --- 動態產生選項 ---
-  // 根據當前狀態決定下拉選單顯示哪些
-  const statusOptions = computed(() => {
-    if (props.type !== 'report') return [];
-
+  // --- 「檢舉」類型用的 computed ---
+  const reportStatusOptions = computed(() => {
+    if (props.type !== 'report' || typeof props.data?.status === 'undefined') return [];
     switch (props.data.status) {
-      case 0: // 待處理
+      case 0:
         return [
           { value: 0, label: '待處理' },
           { value: 1, label: '已下架' },
-          { value: 2, label: '已恢復' },
+          { value: 2, label: '已上架' },
         ];
-      case 1: // 已下架
+      case 1:
         return [
           { value: 1, label: '已下架' },
           { value: 2, label: '已恢復' },
         ];
-      case 2: // 已恢復
+      case 2:
         return [
-          { value: 2, label: '已恢復' },
+          { value: 2, label: '已上架' },
           { value: 1, label: '已下架' },
         ];
       default:
@@ -170,13 +271,61 @@
     }
   });
 
-  // 儲存按鈕事件
+  // --- 「食譜」類型用的狀態和 computed ---
+  const recipeStatusMap = { 0: '待審核', 1: '已上架', 2: '已下架', 3: '草稿' };
+
+  const recipeStatusOptions = computed(() => {
+    if (props.type !== 'recipe' || !props.data?.recipe) return [];
+    const currentStatus = props.data.recipe.status;
+    switch (currentStatus) {
+      case 0:
+        return [
+          { value: 0, label: '待審核' },
+          { value: 1, label: '已上架' },
+          { value: 2, label: '已下架' },
+        ];
+      case 1:
+        return [
+          { value: 1, label: '已上架' },
+          { value: 2, label: '已下架' },
+        ];
+      case 2:
+        return [
+          { value: 2, label: '已下架' },
+          { value: 1, label: '已上架' },
+        ];
+      default:
+        return [{ value: currentStatus, label: recipeStatusMap[currentStatus] || '未知' }];
+    }
+  });
+
+  // --- watch (會同時處理三種 type) ---
+  watch(
+    () => props.data,
+    (newData) => {
+      if (props.type === 'report' && newData) {
+        localStatus.value = newData.status;
+      } else if (props.type === 'recipe' && newData?.recipe) {
+        localStatus.value = newData.recipe.status;
+      }
+    },
+    { immediate: true, deep: true },
+  );
+
+  // --- 事件處理 ---
   function handleSave() {
-    const id = props.type === 'report' ? props.data.report_id : props.data.notification_id;
-    if (id) {
-      emit('save', { id: id, newStatus: localStatus.value });
+    let payload = { id: null, newStatus: localStatus.value };
+    if (props.type === 'report') {
+      payload.id = props.data.report_id;
+    } else if (props.type === 'recipe') {
+      payload.id = props.data.recipe.recipe_id;
+    }
+
+    if (payload.id !== null && localStatus.value !== null) {
+      emit('save', payload);
     } else {
-      console.error('儲存失敗：找不到對應的 ID。', props.data);
+      console.error('儲存失敗：找不到 ID 或未選擇新狀態。');
+      alert('請先從下拉選單中選擇一個處理狀態。');
     }
   }
 
@@ -188,7 +337,8 @@
 </script>
 
 <style scoped lang="scss">
-  /* 這裡貼上您完整的通用燈箱 CSS 樣式 */
+  /* 【✅ 核心修正 1 ✅】 */
+  /* 讓遮罩層自己具備滾動能力 */
   .modal-overlay {
     position: fixed;
     top: 0;
@@ -198,9 +348,15 @@
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* 改為從頂部對齊 */
     z-index: 1000;
+    overflow-y: auto; /* 【最關鍵的一步】允許遮罩層滾動 */
+    padding: 10vh 20px; /* 給予上下內邊距，讓燈箱有呼吸空間 */
+    box-sizing: border-box;
   }
+
+  /* 【✅ 核心修正 2 ✅】 */
+  /* 移除燈箱容器的高度限制 */
   .modal-container {
     width: 550px;
     background-color: #fefbf1;
@@ -208,10 +364,25 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     padding: 40px;
     box-sizing: border-box;
+    /* display: flex; 和 flex-direction: column; 已經是正確的，保持 */
     display: flex;
     flex-direction: column;
-    max-height: 90vh;
+
+    /* 移除 max-height，讓燈箱的高度可以自由地被內容撐開 */
+    /* max-height: 90vh; */
   }
+
+  /* 【✅ 核心修正 3 ✅】 */
+  /* 確保 modal-body 不會自己產生滾動條 */
+  .modal-body {
+    /* flex-grow: 1; */ /* 移除這兩個屬性 */
+    /* overflow-y: auto; */
+  }
+
+  /* ========================================================== */
+  /* --- 以下所有樣式，都與您提供的完全一致，保持不變 --- */
+  /* ========================================================== */
+
   .modal-fade-enter-active,
   .modal-fade-leave-active {
     transition: opacity 0.3s ease;
@@ -226,10 +397,6 @@
     text-align: left;
     margin-bottom: 32px;
     flex-shrink: 0;
-  }
-  .modal-body {
-    flex-grow: 1;
-    overflow-y: auto;
   }
   .info-row {
     display: flex;
