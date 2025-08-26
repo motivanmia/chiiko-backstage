@@ -6,7 +6,7 @@
 
   import Table from '@/components/Table.vue';
   import TheHeader from '@/components/common/TheHeader.vue';
-  import { ingredients } from '@/constants/ingredients.js';
+  // import { ingredients } from '@/constants/ingredients.js';
   import switch_el from '@/components/Switch.vue';
 
   const router = useRouter();

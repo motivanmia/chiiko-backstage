@@ -5,7 +5,7 @@
   import switch_el from "@/components/Switch.vue";
   import TheDetailHeader from '@/components/common/TheDetailHeader.vue';
   import Table from '@/components/Table.vue';
-  import { ingredients } from '@/constants/ingredients.js';
+  // import { ingredients } from '@/constants/ingredients.js';
   
 
   // 編輯器
@@ -53,7 +53,7 @@ function updateStatus(number, newStatus) {
 
   onMounted(() => {
   const id = route.params.id;
-  const product = ingredients.find((p) => p.id === id); // 用你的商品陣列
+  // const product = ingredients.find((p) => p.id === id); // 用你的商品陣列
   if (!product) return;
 
   // 把找到的商品資料暫存到 selectedProduct
