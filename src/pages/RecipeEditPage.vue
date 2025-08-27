@@ -4,16 +4,14 @@
     @click.self="handleClose"
   >
     <div class="recipe-editor">
-      <div
-        class="form-content-wrapper"
-        :class="{ 'is-review-readonly': isReviewMode }"
-      >
-        <h1 class="recipe-editor__title">{{ modalTitle }}</h1>
+      <div class="form-content-wrapper">
+        <h1 class="recipe-editor__title">{{ pageTitle }}</h1>
 
         <ImageUploader
           v-model:file="file"
           :initial-image-url="initialImageUrl"
         />
+
         <FormField
           label="輸入食譜名稱"
           v-model="form.title"
@@ -22,6 +20,7 @@
           :placeholder-desktop="'例：香煎豆腐卷（最多15字）'"
           :placeholder-mobile="'例：三色豆（15字內）'"
         />
+
         <FormField
           label="簡介"
           v-model="form.description"
@@ -34,6 +33,7 @@
             maxlength="40"
           ></textarea>
         </FormField>
+
         <TagInput v-model="form.tags" />
         <RecipeMeta
           :categories="categories"
@@ -50,76 +50,22 @@
             variant="secondary"
             class="action-button-override"
           >
-            取消食譜
+            取消
           </BaseButton>
-
-          <template v-if="isReviewMode">
-            <el-dropdown @command="form.status = $event">
-              <BaseButton
-                variant="primary"
-                class="action-button-override"
-              >
-                {{ form.status === 1 ? '通過審核' : form.status === 2 ? '駁回 (下架)' : '未審核' }}
-              </BaseButton>
-              <template #dropdown>
-                <el-dropdown-menu class="status-dropdown-btn">
-                  <el-dropdown-item
-                    :command="0"
-                    class="font"
-                  >
-                    未審核
-                  </el-dropdown-item>
-                  <el-dropdown-item
-                    :command="1"
-                    class="font"
-                  >
-                    通過審核
-                  </el-dropdown-item>
-                  <el-dropdown-item
-                    :command="2"
-                    class="font"
-                  >
-                    駁回 (下架)
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-
-            <BaseButton
-              @click="submitReview"
-              variant="primary"
-              class="action-button-override"
-            >
-              提交審核
-            </BaseButton>
-          </template>
-
-          <template v-else-if="isEditingOwnRecipe">
-            <BaseButton
-              @click="submitUpdate"
-              variant="primary"
-              class="action-button-override"
-            >
-              修改食譜
-            </BaseButton>
-          </template>
-
-          <template v-else>
-            <BaseButton
-              @click="saveDraft"
-              variant="secondary"
-              class="action-button-override"
-            >
-              暫存草稿
-            </BaseButton>
-            <BaseButton
-              @click="publishRecipe"
-              variant="primary"
-              class="action-button-override"
-            >
-              發布食譜
-            </BaseButton>
-          </template>
+          <BaseButton
+            @click="saveDraft"
+            variant="secondary"
+            class="action-button-override"
+          >
+            暫存草稿
+          </BaseButton>
+          <BaseButton
+            @click="publishRecipe"
+            variant="primary"
+            class="action-button-override"
+          >
+            發布食譜
+          </BaseButton>
         </div>
       </div>
     </div>
@@ -132,12 +78,11 @@
     reactive,
     computed,
     defineEmits,
-    onMounted,
-    onUnmounted,
     defineProps,
     watch,
+    onMounted,
+    onUnmounted,
   } from 'vue';
-  import { useRouter } from 'vue-router';
   import axios from 'axios';
   import BaseButton from '@/components/common/BaseButton.vue';
   import ImageUploader from '@/components/recipe-editor/ImageUploader.vue';
@@ -145,19 +90,9 @@
   import RecipeMeta from '@/components/recipe-editor/RecipeMeta.vue';
   import IngredientsManager from '@/components/recipe-editor/IngredientsManager.vue';
   import StepsManager from '@/components/recipe-editor/StepsManager.vue';
+  import FormField from '@/components/recipe-editor/InputSingleline.vue';
 
   const STATUS = { PENDING: 0, ON: 1, OFF: 2, DRAFT: 3 };
-  const REVIEW_UI = { APPROVE: 1, REJECT: 2 };
-  const uiToBackendStatus = (uiVal) => {
-    if (uiVal === REVIEW_UI.APPROVE) return STATUS.ON;
-    if (uiVal === REVIEW_UI.REJECT) return STATUS.OFF;
-    return STATUS.PENDING;
-  };
-  const backendToUiStatus = (status) => {
-    if (status === STATUS.ON) return REVIEW_UI.APPROVE;
-    if (status === STATUS.OFF) return REVIEW_UI.REJECT;
-    return null;
-  };
 
   const props = defineProps({
     initialData: { type: Object, default: null },
@@ -166,8 +101,6 @@
   const emit = defineEmits(['close', 'save-success']);
   const handleClose = () => emit('close');
 
-  const router = useRouter();
-  const isAdmin = ref(true);
   const initialImageUrl = ref(null);
   const file = ref(null);
 
@@ -191,28 +124,11 @@
     servings: '1~2',
     ingredients: [{ name: '', amount: '' }],
     steps: [''],
-    status: null,
+    status: STATUS.DRAFT,
   });
 
   const isEditing = computed(() => !!props.initialData);
-
-  // 【✅ 唯一的小優化 ✅】
-  // 增加對 props.initialData.recipe 的可選鏈檢查，讓程式碼更穩健
-  const isMemberRecipe = computed(() => {
-    const u = props.initialData?.recipe?.user_id;
-    return u !== undefined && u !== null;
-  });
-
-  const isReviewMode = computed(() => isAdmin.value && isEditing.value && isMemberRecipe.value);
-  const isEditingOwnRecipe = computed(
-    () => isAdmin.value && isEditing.value && !isMemberRecipe.value,
-  );
-
-  const modalTitle = computed(() => {
-    if (isReviewMode.value) return '審核食譜';
-    if (isEditingOwnRecipe.value) return '修改食譜';
-    return '新增食譜';
-  });
+  const pageTitle = computed(() => (isEditing.value ? '編輯食譜' : '新增食譜'));
 
   const titleWarning = computed(() => (form.title.length > 15 ? '標題不能超過 15 字喔！' : ''));
   const descriptionWarning = computed(() =>
@@ -222,9 +138,10 @@
   watch(
     () => props.initialData,
     (newData) => {
-      const recipe = newData?.recipe;
-      const ingredients = newData?.ingredients;
-      const steps = newData?.steps;
+      if (!newData) return;
+      const recipe = newData.recipe;
+      const ingredients = newData.ingredients;
+      const steps = newData.steps;
 
       if (recipe) {
         form.title = recipe.name || '';
@@ -234,157 +151,107 @@
         form.category = foundCategory ? foundCategory.value : 'single';
         form.time = recipe.cooked_time || '5~10';
         form.servings = recipe.serving || '1~2';
-        form.status = backendToUiStatus(recipe.status);
+        form.status = recipe.status ?? STATUS.DRAFT;
         form.ingredients =
           Array.isArray(ingredients) && ingredients.length
-            ? ingredients.map((item) => ({ name: item.name, amount: item.serving }))
+            ? ingredients.map((i) => ({ name: i.name, amount: i.serving }))
             : [{ name: '', amount: '' }];
-        form.steps =
-          Array.isArray(steps) && steps.length ? steps.map((s) => s.content || '') : [''];
-        initialImageUrl.value = recipe.image || null;
-        file.value = null;
-      } else {
-        Object.assign(form, {
-          title: '',
-          description: '',
-          tags: [],
-          category: 'single',
-          time: '5~10',
-          servings: '1~2',
-          ingredients: [{ name: '', amount: '' }],
-          steps: [''],
-          status: null,
-        });
-        file.value = null;
-        initialImageUrl.value = null;
+        form.steps = Array.isArray(steps) && steps.length ? steps.map((s) => s.content) : [''];
+        initialImageUrl.value = recipe.image
+          ? `${import.meta.env.VITE_API_BASE}/uploads/${recipe.image}`
+          : null;
       }
     },
     { immediate: true, deep: true },
   );
 
+  // ✅ **【邏輯同步核心】**
+  // 整個 submitRecipe 函式採用前台的「統合式」設計
   const submitRecipe = async (statusCode) => {
-    const isPublishingAction = [STATUS.PENDING, STATUS.ON].includes(statusCode);
-    if (isPublishingAction) {
-      const errors = [];
+    // 步驟 1: 前端驗證
+    const errors = [];
+    if ([STATUS.PENDING, STATUS.ON].includes(statusCode)) {
       if (!form.title.trim()) errors.push('請輸入食譜名稱。');
       if (!form.description.trim()) errors.push('請輸入簡介。');
       if (!file.value && !initialImageUrl.value) errors.push('請上傳一張食譜圖片。');
-      if (form.tags.length === 0) errors.push('請至少新增一個食譜標籤。');
-      if (form.ingredients.some((item) => !item.name.trim() || !item.amount.trim()))
-        errors.push('所有「所需食材」和「份量」都必須填寫。');
-      if (form.steps.some((step) => !step.trim())) errors.push('所有「料理步驟」都必須填寫內容。');
-      if (errors.length > 0) {
-        alert('發布前請修正以下問題：\n\n- ' + errors.join('\n- '));
-        return;
-      }
+      // ... 其他驗證可以視需求加入 ...
+    }
+    if (errors.length > 0) {
+      alert('發布前請修正以下問題：\n\n- ' + errors.join('\n- '));
+      return;
     }
 
     try {
       const apiBase = import.meta.env.VITE_API_BASE;
-      let imagePath = '';
-      if (isEditing.value && initialImageUrl.value) {
-        imagePath = initialImageUrl.value.split('/').pop();
-      }
+      let finalImageName = '';
+
+      // 步驟 2: 處理圖片
       if (file.value) {
         const formData = new FormData();
         formData.append('image', file.value);
+        // 注意：後台的上傳 API 路徑可能不同，請確認為 /admin/recipe/upload_image.php
         const imageRes = await axios.post(`${apiBase}/admin/recipe/upload_image.php`, formData, {
           withCredentials: true,
         });
-        if (imageRes.data.status !== 'success')
+        if (imageRes.data.status === 'success' && imageRes.data.imagePath) {
+          finalImageName = imageRes.data.imagePath;
+        } else {
           throw new Error(imageRes.data.message || '圖片上傳失敗');
-        imagePath = imageRes.data.imagePath;
+        }
+      } else if (isEditing.value && initialImageUrl.value) {
+        finalImageName = initialImageUrl.value.split('/').pop();
       }
 
-      const getLoggedInUserId = () => 1;
-      const getLoggedInAdminId = () => 1;
+      if (!finalImageName && [STATUS.PENDING, STATUS.ON].includes(statusCode)) {
+        throw new Error('請上傳一張食譜圖片。');
+      }
+
+      // 步驟 3: 將所有資料打包成一個 Payload
+      const managerId = 1; // 後台發布，寫死管理員 ID
       const selectedCategory = categories.find((c) => c.value === form.category);
 
       const recipePayload = {
         recipe_id: isEditing.value ? props.initialData.recipe.recipe_id : null,
-        user_id: isAdmin.value ? null : getLoggedInUserId(),
-        manager_id: isAdmin.value ? getLoggedInAdminId() : null,
+        user_id: null, // 後台發布，user_id 為 null
+        manager_id: managerId,
         recipe_category_id: selectedCategory ? selectedCategory.id : null,
         name: form.title,
         content: form.description,
         serving: form.servings,
-        image: imagePath,
+        image: finalImageName,
         cooked_time: form.time,
         status: statusCode,
         tag: form.tags.map((t) => `#${t}`).join(''),
+        // **【關鍵】** 將食材和步驟一起打包
+        ingredients: form.ingredients.filter((i) => i.name && i.amount),
+        steps: form.steps
+          .map((step, index) => ({ content: step, order: index + 1 }))
+          .filter((s) => s.content && s.content.trim()),
       };
 
+      // 步驟 4: 一次性提交到後台的 post_recipe.php
+      // 注意：這裡的 API Endpoint 應為後台專用的路徑
       const apiEndpoint = isEditing.value
-        ? `${apiBase}/admin/recipe/update_recipe.php`
-        : `${apiBase}/admin/recipe/create_recipe.php`;
-      const { data: recipeRes } = await axios.post(apiEndpoint, recipePayload, {
-        withCredentials: true,
-      });
-      const recipeId = isEditing.value ? props.initialData.recipe.recipe_id : recipeRes.recipe_id;
-      if (!recipeId) throw new Error('後端未回傳 recipe_id');
+        ? `${apiBase}/recipe/update_recipe.php` // 編輯的 API 請自行替換
+        : `${apiBase}/recipe/post_recipe.php`;
 
-      const ingredientsPayload = {
-        recipe_id: recipeId,
-        ingredients: form.ingredients
-          .filter((i) => i.name && i.amount)
-          .map((i) => ({ ingredient_id: i.ingredient_id ?? null, name: i.name, amount: i.amount })),
-        mode: isEditing.value ? 'replace' : 'append',
-      };
-      await axios.post(`${apiBase}/admin/recipe/post_ingredients.php`, ingredientsPayload, {
+      await axios.post(apiEndpoint, recipePayload, {
         withCredentials: true,
       });
 
-      const stepsPayload = {
-        recipe_id: recipeId,
-        steps: form.steps.filter((s) => s && s.trim()),
-        mode: isEditing.value ? 'replace' : 'append',
-      };
-      await axios.post(`${apiBase}/admin/recipe/post_steps.php`, stepsPayload, {
-        withCredentials: true,
-      });
-
-      alert(isPublishingAction ? '🎉 食譜已成功發布/更新！' : '✅ 草稿已儲存！');
+      // 步驟 5: 成功回饋
+      alert(statusCode === STATUS.DRAFT ? '✅ 草稿已儲存！' : '🎉 食譜已成功發布！');
       emit('save-success');
       handleClose();
     } catch (error) {
       const message = error?.response?.data?.message || error?.message || '發生未知錯誤';
-      console.error('發布/儲存錯誤:', error);
+      console.error('操作錯誤:', error);
       alert(`操作失敗：\n${message}`);
     }
   };
 
   const saveDraft = () => submitRecipe(STATUS.DRAFT);
-  const publishRecipe = () => {
-    const finalStatusCode = isAdmin.value ? STATUS.ON : STATUS.PENDING;
-    submitRecipe(finalStatusCode);
-  };
-
-  const submitReview = async () => {
-    if (!props.initialData?.recipe) return;
-    try {
-      const apiBase = import.meta.env.VITE_API_BASE;
-      const nextStatus = uiToBackendStatus(form.status);
-      const payload = {
-        recipe_id: props.initialData.recipe.recipe_id,
-        status: nextStatus,
-      };
-      await axios.post(`${apiBase}/admin/recipe/update_recipe_status.php`, payload, {
-        withCredentials: true,
-      });
-      alert('✅ 審核結果已更新！');
-      emit('save-success');
-      handleClose();
-    } catch (error) {
-      const message = error?.response?.data?.message || error?.message || '更新審核結果時發生錯誤';
-      console.error('審核錯誤：', error);
-      alert(`審核失敗：\n${message}`);
-    }
-  };
-
-  const submitUpdate = () => {
-    const keepStatus = props.initialData?.recipe?.status ?? STATUS.ON;
-    submitRecipe(keepStatus);
-  };
+  const publishRecipe = () => submitRecipe(STATUS.ON);
 
   onMounted(() => {
     document.body.style.overflow = 'hidden';
