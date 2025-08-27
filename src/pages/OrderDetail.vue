@@ -42,7 +42,10 @@
             name: order.recipient,
             phone: order.recipient_phone,
             address: order.shopping_address,
-            tracking_number: order.order_status_text !== '待確認' ? order.tracking_number : '無',
+            tracking_number:
+              order.order_status_text !== '待確認' && order.order_status_text !== '取消/退貨'
+                ? order.tracking_number
+                : '無',
           },
         ];
 
