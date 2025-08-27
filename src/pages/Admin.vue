@@ -8,6 +8,10 @@
   import AddAdminModal from '@/components/users/AddAdminModal.vue';
   import { useAuthStore } from '@/stores/Auth';
   import EditAdminModal from '@/components/users/EditAdminModal.vue';
+  import { useToastStore } from '@/stores/Toast';
+
+  const toastStore = useToastStore();
+  const { showToast } = toastStore;
 
   const authStore = useAuthStore();
   const apiBase = import.meta.env.VITE_API_BASE;
@@ -126,19 +130,19 @@
         { withCredentials: true },
       );
       if (response.data.status === 'success') {
-        handleMessage(response.data.message || '狀態更新成功！');
+        showToast(response.data.message || '狀態更新成功！');
       } else {
         // 錯誤時，將狀態回滾並顯示訊息
         if (item) item.status = originalStatus;
-        handleMessage(response.data.message || '狀態更新失敗。');
+        showToast(response.data.message || '狀態更新失敗。');
       }
     } catch (error) {
       console.error('Failed to update admin status:', error); // 錯誤時，將狀態回滾
       if (item) item.status = originalStatus;
       if (error.response && error.response.data) {
-        handleMessage(error.response.data.message);
+        showToast(error.response.data.message);
       } else {
-        handleMessage('無法連接到伺服器。');
+        showToast('無法連接到伺服器。');
       }
     }
   };
@@ -169,7 +173,6 @@
     @toggle-status="handleStatusToggle"
     :table-data="filterData"
     :columns="columns"
-
     @edit-click="handleEditClick"
   />
   <EditAdminModal

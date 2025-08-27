@@ -4,6 +4,10 @@
   import TheHeader from '@/components/common/TheHeader.vue';
   import { getMember, patchMember } from '@/api/fetch';
   import { useFilter } from '@/composables/useFilter';
+  import { useToastStore } from '@/stores/Toast';
+
+  const toastStore = useToastStore();
+  const { showToast } = toastStore;
 
   // 訊息提示相關的 ref
   const showError = ref(false);
@@ -103,20 +107,20 @@
 
       // 檢查api回傳的狀態
       if (response.data.status === 'success') {
-        handleMessage(response.data.message || '狀態更新成功！');
+        showToast(response.data.message || '狀態更新成功！');
       } else {
         // api回傳失敗狀態
         item.status = originalStatus;
-        handleMessage(response.data.message || '狀態更新失敗。');
+        showToast(response.data.message || '狀態更新失敗。');
       }
     } catch (error) {
       console.error('更新資料時發生錯誤:', error);
       // 錯誤時將狀態回復並顯示訊息
       if (item) item.status = originalStatus;
       if (error.response && error.response.data) {
-        handleMessage(error.response.data.message);
+        showToast(error.response.data.message);
       } else {
-        handleMessage('無法連接到伺服器。');
+        showToast('無法連接到伺服器。');
       }
     }
   };

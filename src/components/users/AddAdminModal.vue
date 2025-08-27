@@ -2,9 +2,13 @@
   import { ref } from 'vue';
   import InputField from '@/components/users/InputField.vue';
   import axios from 'axios';
+  import { useToastStore } from '@/stores/Toast';
+
+  const toastStore = useToastStore();
+  const { showToast } = toastStore;
 
   const apiBase = import.meta.env.VITE_API_BASE;
-  const emit = defineEmits(['close', 'add-success', 'add-failure', 'psw-error']);
+  const emit = defineEmits(['close', 'add-success']);
 
   const account = ref('');
   const password = ref('');
@@ -15,7 +19,7 @@
   const signup = async () => {
     // 密碼確認
     if (password.value !== passwordConfirm.value) {
-      emit('psw-error', '密碼與確認密碼不相符');
+      showToast('密碼與確認密碼不相符', 'error');
       return;
     }
 
@@ -32,16 +36,16 @@
       const response = await axios.post(API_URL, formData);
 
       if (response.status >= 200 && response.status < 300) {
-        // alert(response.data.message);
+        showToast(response.data.message, 'success');
         emit('add-success');
         emit('close');
       }
     } catch (error) {
       // 處理錯誤
       if (error.response && error.response.data && error.response.data.message) {
-        emit('add-failure', error.response.data.message);
+        showToast(error.response.data.message, 'error');
       } else {
-        alert('新增管理員失敗，請稍後再試。');
+        showToast('新增管理員失敗，請稍後再試。', 'error');
       }
     }
   };
@@ -52,7 +56,10 @@
     <div class="modal-overlay">
       <div class="modal-content">
         <h2 id="modal-title">新增管理員</h2>
-        <form @submit.prevent="signup">
+        <form
+          @submit.prevent="signup"
+          autocomplete="off"
+        >
           <InputField
             v-model="name"
             label="名稱"

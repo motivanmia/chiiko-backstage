@@ -3,6 +3,10 @@
   import { defineProps, defineEmits } from 'vue';
   import { ref, watch } from 'vue';
   import InputField from '@/components/users/InputField.vue';
+  import { useToastStore } from '@/stores/Toast';
+
+  const toastStore = useToastStore();
+  const { showToast } = toastStore;
 
   // 1. 定義 props 和 emits
   const props = defineProps({
@@ -17,7 +21,8 @@
   });
 
   // 用來傳送提示訊息給父元件
-  const emit = defineEmits(['close', 'edit-success', 'message']);
+  // const emit = defineEmits(['close', 'edit-success', 'message']);
+  const emit = defineEmits(['close', 'edit-success']);
 
   // 2. 建立表單狀態
   const name = ref('');
@@ -31,8 +36,9 @@
     () => props.currentRow,
     (newVal) => {
       if (newVal) {
-        name.value = '';
-        account.value = '';
+        name.value = newVal.name || '';
+        account.value = newVal.account || '';
+        // 密碼相關欄位通常不會自動填充，而是讓使用者自行輸入，所以保持為空
         password.value = '';
         passwordConfirm.value = '';
       }
@@ -44,17 +50,17 @@
   const editAdmin = async () => {
     // 進行基本的表單驗證
     if (password.value !== passwordConfirm.value) {
-      emit('message', '兩次輸入的密碼不一致！', 'error');
+      showToast('兩次輸入的密碼不一致！', 'error');
       return;
     }
     const regex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{6,}$/;
 
     if (password.value && !regex.test(password.value)) {
-      emit('message', '密碼必須中英混搭且至少6個字元！', 'error');
+      showToast('密碼必須中英混搭且至少6個字元！', 'error');
       return;
     }
     if (account.value && !regex.test(account.value)) {
-      emit('message', '帳號必須中英混搭且至少6個字元！', 'error');
+      showToast('帳號必須中英混搭且至少6個字元！', 'error');
       return;
     }
 
@@ -63,22 +69,22 @@
       manager_id: props.currentRow.manager_id,
     };
 
-  // 檢查所有輸入欄位是否都為空
-  if (!name.value && !account.value && !password.value && !passwordConfirm.value) {
-    emit('message', '沒有任何變更。', 'info');
-    return;
-  }
+    // 檢查所有輸入欄位是否都為空
+    if (!name.value && !account.value && !password.value && !passwordConfirm.value) {
+      showToast('message', '沒有任何變更。', 'info');
+      return;
+    }
 
-  // 檢查是否有輸入值，如果有就加入 payload
-  if (name.value) {
-    payload.name = name.value;
-  }
-  if (account.value) {
-    payload.account = account.value;
-  }
-  if (password.value) {
-    payload.password = password.value;
-  }
+    // 檢查是否有輸入值，如果有就加入 payload
+    if (name.value) {
+      payload.name = name.value;
+    }
+    if (account.value) {
+      payload.account = account.value;
+    }
+    if (password.value) {
+      payload.password = password.value;
+    }
 
     try {
       const API_URL = `${apiBase}/update_admin_info.php`;
@@ -88,17 +94,16 @@
       });
 
       if (response.data.status === 'success') {
-        emit('message', response.data.message || '管理員資料已更新！', 'success');
-        emit('edit-success');
+        showToast(response.data.message || '管理員資料已更新！', 'success');
       } else {
-        emit('message', response.data.message || '更新失敗，請稍後再試。', 'error');
+        showToast(response.data.message || '更新失敗，請稍後再試。', 'error');
       }
     } catch (error) {
       console.error('Failed to update admin info:', error);
       if (error.response && error.response.data) {
-        emit('message', error.response.data.message, 'error');
+        showToast(error.response.data.message, 'error');
       } else {
-        emit('message', '無法連接到伺服器。', 'error');
+        showToast('無法連接到伺服器。', 'error');
       }
     }
   };

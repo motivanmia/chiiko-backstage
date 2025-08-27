@@ -26,7 +26,7 @@
     background: color(button, main);
     color: color(text, light);
     padding: 0.6em 1.2em;
-    border-radius: 0.4em;
+    border-radius: 20px;
     font-size: 20px;
     pointer-events: none;
     z-index: 20;
@@ -40,7 +40,7 @@
     background: #cccccc;
     color: color(text, dark);
     padding: 0.6em 1.2em;
-    border-radius: 0.4em;
+    border-radius: 20px;
     font-size: 20px;
     pointer-events: none;
     width: auto;
