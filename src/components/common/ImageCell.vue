@@ -221,7 +221,9 @@
     background-color: color(button, main);
     border: none;
     &:hover {
-      background-color: lighten(color(button, main), 15%);
+      background-color: color(backgroundColor, beige);
+      color: color(text, dark);
+      border: 1px solid color(button, main);
     }
   }
   :deep(.el-button--danger) {
@@ -229,7 +231,9 @@
     background-color: color(button, main);
     border: none;
     &:hover {
-      background-color: lighten(color(button, main), 15%);
+      background-color: color(backgroundColor, beige);
+      color: color(text, dark);
+      border: 1px solid color(button, main);
     }
   }
 </style>
