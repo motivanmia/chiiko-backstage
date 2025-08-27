@@ -74,14 +74,14 @@
 
   // 表格欄位
   const columns = ref([
-    { prop: 'product_id', label: '商品編號', width: 110 },
-    { prop: 'category_name', label: '商品分類', width: 110 },
+    { prop: 'product_id', label: '商品編號', width: 200 },
+    { prop: 'category_name', label: '商品分類', width: 250 },
     { prop: 'preview_image', label: '商品預覽圖片', type: 'image' },
-    { prop: 'product_name', label: '商品名稱', width: 200 },
-    { prop: 'price', label: '單價', width: 100 },
-    { prop: 'status', label: '商品狀態', type: 'status', width: 140 },
-    { prop: 'icon', label: '編輯', type: 'button-detail', width: 60 },
-    { prop: 'del', label: '刪除', type: 'button-del', width: 60 },
+    { prop: 'product_name', label: '商品名稱' },
+    { prop: 'price', label: '單價' },
+    { prop: 'status', label: '狀態', type: 'status', width: 200 },
+    { prop: 'icon', label: '編輯', type: 'button-edit', width: 100 },
+    { prop: 'del', label: '刪除', type: 'button-del', width: 100 },
   ]);
 
   // const goToDetail = () => {
