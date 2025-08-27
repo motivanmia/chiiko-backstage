@@ -1,122 +1,158 @@
 <script setup>
   import 'element-plus/theme-chalk/el-cascader.css';
   import { ref, computed, onMounted } from 'vue';
-  import axios from 'axios';
   import { useRouter } from 'vue-router';
-
   import Table from '@/components/Table.vue';
   import TheHeader from '@/components/common/TheHeader.vue';
-  // import { ingredients } from '@/constants/ingredients.js';
-  import switch_el from '@/components/Switch.vue';
+  import { useFilter } from '@/composables/useFilter';
+  import { useToastStore } from '@/stores/Toast';
+  import { getProducts, patchProductsActive } from '@/api/fetch';
+
+  const toastStore = useToastStore();
+  const { showToast } = toastStore;
 
   const router = useRouter();
-  const API_BASE = import.meta.env.VITE_API_BASE;
-  const FILE_BASE = import.meta.env.VITE_FILE_URL;
-  const GetProductData = async () => {
-    const res = await axios.get(`${API_BASE}/product/get_product_detail.php`, {
-      withCredentials: true,
-    });
-    return JSON.parse(res.data.data);
-  };
+  function goToDetail(row) {
+    // row 來自 tableRows，已經有 product_id
+    console.log('收到的 row 資料:', row);
+    router.push({ name: 'ProductDetail', params: { id: row.product_id } });
+  }
+  function goCreate() {
+    router.push({ name: 'ProductDetail', params: { id: 'new' } });
+  }
 
   // 原始資料
   const useMockData = false;
 
   const tableData = ref([]);
-
-  onMounted(async () => {
-    try {
-      const products = await GetProductData();
-      tableData.value = products; // 直接灌進 ref
-    } catch (err) {
-      console.error('取得商品資料失敗', err);
-    }
-  });
-  const categoryOptions = [
-    { label: '已上架', value: 'on' },
-    { label: '已下架', value: 'off' },
-  ];
-
-  const searchOption = ref('all');
+  const searchOption = ref([]);
   const searchText = ref('');
-
-  const filteredTableData = computed(() => {
-    const rawCat = searchOption.value;
-    // console.log(rawCat);
-
-    const cat = Array.isArray(rawCat) && rawCat !== null ? rawCat.value : String(rawCat || '');
-
-    // console.log(cat);
-
-    const kw = searchText.value.trim().toLowerCase();
-
-    // 1) 先按分類（就算沒有關鍵字也要先篩）
-    let rows = tableData.value;
-    console.log('Test');
-    rows.forEach((element) => {
-      if (!element.preview_image.includes('http')) {
-        element.preview_image = `${FILE_BASE}/${element.preview_image}`;
-        console.log(element);
-      }
-    });
-    if (cat && cat !== 'all') {
-      rows = rows.filter((r) => r.category === cat);
-    }
-
-    // 2) 再按關鍵字（這裡示範只搜名稱，要搜更多欄位就加）
-    if (!kw) return rows;
-    return rows.filter((r) => {
-      const nameHit = String(r.name).toLowerCase().includes(kw);
-      const numberHit = String(r.number).toLowerCase().includes(kw);
-      return nameHit || numberHit;
-    });
-  });
 
   // 表格欄位
   const columns = ref([
     { prop: 'product_id', label: '商品編號', width: 200 },
     { prop: 'category_name', label: '商品分類', width: 250 },
     { prop: 'preview_image', label: '商品預覽圖片', type: 'image' },
-    { prop: 'product_name', label: '商品名稱' },
-    { prop: 'price', label: '單價' },
-    { prop: 'status', label: '狀態', type: 'status', width: 200 },
+    { prop: 'name', label: '商品名稱' },
+    { prop: 'unit_price', label: '單價' },
+    { prop: 'is_active', label: '狀態', type: 'status', width: 200 },
     { prop: 'icon', label: '編輯', type: 'button-edit', width: 100 },
-    { prop: 'del', label: '刪除', type: 'button-del', width: 100 },
   ]);
 
-  // const goToDetail = () => {
-  //   router.push({ name: 'ProductDetail' });
-  // };
-  const goToDetail = () => {
-    router.push({ name: 'ProductDetail', params: { id: 'new' } });
-  };
-  const updateStatus = async (id, status) => {
-    try {
-      await axios.patch(`${API_BASE}/products/${id}`, { status });
-      const item = tableData.value.find((p) => p.number === id);
-      if (item) item.status = status;
-    } catch (err) {
-      console.error('更新狀態失敗', err);
-    }
+  // 訊息提示相關的 ref
+  const showError = ref(false);
+  const errorMessage = ref('');
+
+  const handleMessage = (message) => {
+    showError.value = true;
+    errorMessage.value = message;
+    setTimeout(() => (showError.value = false), 2000);
   };
 
-  const deleteProduct = async (row) => {
-    console.log(row);
-    if (!confirm(`確定刪除 ${row.name} 嗎？`)) return;
+  // 定義選項生成邏輯
+  const optionsGenerator = (data) => {
+    // 定義主選項
+    const mainOptions = [
+      { label: '鍋具/鍋鏟', value: '鍋具/鍋鏟' },
+      { label: '烤箱/氣炸鍋', value: '烤箱/氣炸鍋' },
+      { label: '刀具/砧板', value: '刀具/砧板' },
+      { label: '廚房小物', value: '廚房小物' },
+    ];
+
+    // 為每個主選項生成子選項
+    const secOptions = mainOptions.map((mainOpt) => {
+      // 過濾出與主選項相符的資料
+      const filteredData = data.filter((item) => item.category_name === mainOpt.value);
+
+      // 根據過濾後的資料生成status子選項
+      const uniqueStatus = [...new Set(filteredData.map((item) => item.is_active))];
+
+      const subChildren = uniqueStatus.map((is_active) => ({
+        label: is_active === 0 ? '上架' : '下架',
+        value: is_active,
+      }));
+      return {
+        ...mainOpt,
+        children: subChildren,
+      };
+    });
+    return secOptions;
+  };
+
+  // 使用composable生成選項
+  const { dropOptions, filterData } = useFilter(
+    tableData,
+    searchOption,
+    searchText,
+    optionsGenerator,
+    'category_name',
+    'is_active',
+  );
+
+  // 統一狀態的值
+  const productsStatus = (data) => {
+    return data.map((item) => {
+      // 檢查各種可能的正常狀態 (0, '0', false)
+      const isNormal = item.is_active === 0 || item.is_active === '0' || item.is_active === false;
+      const processedStatus = isNormal ? 0 : 1;
+      return {
+        ...item,
+        is_active: processedStatus, // ✨ 這裡從 'status' 改為 'is_active'
+      };
+    });
+  };
+
+  // 引入api獲得商品資料
+  async function fetchData() {
     try {
-      const res = await axios.post(
-        `${API_BASE}/product/delete_product.php`,
-        { product_id: row.product_id }, // 一定要傳 product_id
-        {
-          headers: { 'Content-Type': 'application/json' },
-          withCredentials: true,
-        },
-      );
-      console.log(res);
-      // 刪除成功後更新 tableData
-      tableData.value = tableData.value.filter((p) => p.product_id !== row.product_id);
-    } catch (err) {
-      console.error('刪除失敗', err.response?.data || err);
+      const response = await getProducts();
+      if (response && response.data && response.data.status === 'success') {
+        tableData.value = productsStatus(response.data.data);
+      } else {
+        console.error('API 錯誤: 回傳資料格式不正確或為空');
+        handleMessage('無法載入商品資料。');
+      }
+    } catch (error) {
+      console.error('取得資料時發生錯誤:', error);
+      handleMessage('無法連接到伺服器。');
+    }
+  }
+
+  // 元件掛載後自動呼叫fetchData
+  onMounted(() => {
+    fetchData();
+  });
+
+  // 狀態切換
+  const handleStatusToggle = async ({ rowData, newStatus }) => {
+    const item = tableData.value.find((item) => item.product_id === rowData.product_id);
+
+    if (!item) return;
+
+    const originalStatus = item.is_active;
+    item.is_active = newStatus;
+
+    try {
+      // ✨ 使用新的 patchProductsActive 函式，並傳遞正確的參數
+      const response = await patchProductsActive(item.product_id, {
+        product_id: item.product_id,
+        is_active: newStatus,
+      });
+
+      if (response.data.status === 'success') {
+        showToast(response.data.message || '狀態更新成功！');
+      } else {
+        item.is_active = originalStatus;
+        showToast(response.data.message || '狀態更新失敗。');
+      }
+    } catch (error) {
+      console.error('更新資料時發生錯誤:', error);
+      if (item) item.is_active = originalStatus;
+      if (error.response && error.response.data) {
+        showToast(error.response.data.message);
+      } else {
+        showToast('無法連接到伺服器。');
+      }
     }
   };
 </script>
@@ -127,56 +163,22 @@
       title="商品管理"
       v-model:searchOption="searchOption"
       v-model:searchText="searchText"
-      :dropOptions="categoryOptions"
+      :dropOptions="dropOptions"
       :show-increase-button="true"
-      @create="goToDetail"
+      @create="goCreate"
     />
   </div>
 
   <div class="ingredient-board__contents">
     <Table
-      :table-data="filteredTableData"
+      yes="上架"
+      no="下架"
+      @toggle-status="handleStatusToggle"
+      :table-data="filterData"
       :columns="columns"
-      @button-click="goToDetail"
-      @del-click="deleteProduct"
-    >
-      <template #img="{ row }">
-        <img
-          :src="row.preview_image"
-          alt="商品圖片"
-          class="product-img"
-        />
-      </template>
-      <template #status="{ row }">
-        <switch_el
-          v-model="row.status"
-          yes="上架"
-          no="下架"
-          @toggle="(v) => updateStatus(row.number, v)"
-        />
-      </template>
-      <!-- 編輯按鈕 -->
-      <template #icon="{ row }">
-        <Icon @click="goToDetail(row)" />
-      </template>
-    </Table>
+      @edit-click="goToDetail"
+    ></Table>
   </div>
 </template>
 
-<style scoped>
-  .slider::after {
-    content: '上架';
-    position: absolute;
-    right: 6px;
-    top: 2px;
-    font-size: 12px;
-    color: white;
-    pointer-events: none;
-  }
-
-  input:checked + .slider::after {
-    content: '下架';
-    left: 6px;
-    right: auto;
-  }
-</style>
+<style scoped></style>
