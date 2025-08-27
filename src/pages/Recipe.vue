@@ -38,9 +38,9 @@
   import { useFilter } from '@/composables/useFilter';
   import Table from '@/components/Table.vue';
   import TheHeader from '@/components/common/TheHeader.vue';
-  import axios from 'axios';
   import RecipeEditorModal from '@/pages/RecipeEditPage.vue';
   import DetailModal from '@/components/DetailModal.vue';
+  import request from '@/utils/request';
 
   // --- 狀態管理 (保持不變) ---
   const isEditorModalVisible = ref(false);
@@ -66,7 +66,7 @@
 
   // 【✅ 核心修正 ✅】
   // 使用一個常數來管理 API 基礎路徑，避免重複打錯
-  const API_BASE_URL = 'http://localhost:8888';
+  const res = await request.get('/recipe/list_recipes.php');
 
   // --- 資料獲取與刷新 ---
   const fetchRecipeList = async () => {

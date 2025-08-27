@@ -40,7 +40,7 @@
   import TheHeader from '@/components/common/TheHeader.vue';
   import Table from '@/components/Table.vue';
   import DetailModal from '@/components/DetailModal.vue';
-
+  import request from '@/utils/request';
   // --- 狀態管理 ---
   const isModalVisible = ref(false);
   const selectedReport = ref(null);
@@ -74,9 +74,7 @@
     isLoading.value = true;
     error.value = null;
     try {
-      const res = await axios.get('http://localhost:8888/admin/recipe/get_comment_reports.php', {
-        withCredentials: true,
-      });
+      const res = await request.get('/recipe/get_comment_reports.php');
 
       if (res.data.status === 'success') {
         // 將後端資料轉換成前端表格需要的格式
@@ -124,16 +122,10 @@
     try {
       // 2. 【✅ 核心修正 ✅】
       //    發送給後端的 report_id，必須是 updateInfo.id (原始的、未經格式化的數字 ID)
-      await axios.post(
-        'http://localhost:8888/admin/recipe/update_report_status.php',
-        {
-          report_id: updateInfo.id,
-          new_status: parseInt(updateInfo.newStatus, 10),
-        },
-        {
-          withCredentials: true,
-        },
-      );
+      await request.post('/recipe/update_report_status.php', {
+        report_id: updateInfo.id,
+        new_status: parseInt(updateInfo.newStatus, 10),
+      });
 
       // 3. API 成功後，直接在前端更新狀態，畫面會自動響應
       //    我們更新的是原始資料陣列 `reports` 中的 status
