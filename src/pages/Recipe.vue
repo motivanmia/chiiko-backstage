@@ -37,6 +37,7 @@
   import { ref, onMounted } from 'vue';
   import { useFilter } from '@/composables/useFilter';
   import Table from '@/components/Table.vue';
+  import axios from 'axios';
   import TheHeader from '@/components/common/TheHeader.vue';
   import RecipeEditorModal from '@/pages/RecipeEditPage.vue';
   import DetailModal from '@/components/DetailModal.vue';
@@ -66,12 +67,12 @@
 
   // 【✅ 核心修正 ✅】
   // 使用一個常數來管理 API 基礎路徑，避免重複打錯
-  const res = await request.get('/recipe/list_recipes.php');
-
+  // const res = await request.get('/recipe/list_recipes.php');
+  const apiBase = import.meta.env.VITE_API_BASE;
   // --- 資料獲取與刷新 ---
   const fetchRecipeList = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/admin/recipe/list_recipes.php`, {
+      const res = await axios.get(`${apiBase}/recipe/list_recipes.php`, {
         withCredentials: true,
       });
       if (res.data.status === 'success') {
@@ -119,7 +120,7 @@
     if (!confirm(`您確定要刪除食譜「${recipeName}」(編號: ${recipeId}) 嗎？`)) return;
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/admin/recipe/delete_recipe.php`,
+        `${apiBase}/recipe/delete_recipe.php`,
         { recipe_id: recipeId },
         { withCredentials: true },
       );
@@ -141,7 +142,7 @@
     try {
       // 確保這裡的 URL 也是正確的
       const res = await axios.get(
-        `${API_BASE_URL}/admin/recipe/fetch_recipe_details.php?recipe_id=${recipeId}`,
+        `${apiBase}/recipe/fetch_recipe_details.php?recipe_id=${recipeId}`,
         { withCredentials: true },
       );
       if (res.data.status === 'success') {
