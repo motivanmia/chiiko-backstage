@@ -276,7 +276,7 @@
         return [
           { value: 0, label: '待審核' },
           { value: 1, label: '已上架' },
-          { value: 2, label: '已下架' },
+          { value: 3, label: '草稿' },
         ];
       case 1:
         return [
