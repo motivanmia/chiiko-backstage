@@ -42,6 +42,7 @@
             name: order.recipient,
             phone: order.recipient_phone,
             address: order.shopping_address,
+            tracking_number: order.order_status_text !== '待確認' ? order.tracking_number : '無',
           },
         ];
 
@@ -83,6 +84,7 @@
 
       if (data.status === 'success') {
         toastStore.showToast('訂單更新成功', 'success');
+        await loadOrderItem();
       } else {
         showToast(data.message || '訂單更新失敗', 'error');
       }

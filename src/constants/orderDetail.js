@@ -17,6 +17,7 @@ export const memberColumns = [
   { prop: 'name', label: '收件人姓名', width: 200 },
   { prop: 'phone', label: '收件人電話', width: 200 },
   { prop: 'address', label: '收件地址' },
+  { prop: 'tracking_number', label: '物流單號' },
 ];
 
 export const productColumns = [
