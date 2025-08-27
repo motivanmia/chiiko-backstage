@@ -138,33 +138,70 @@
   watch(
     () => props.initialData,
     (newData) => {
-      if (!newData) return;
+      // 當 Modal 關閉，newData 為 null 時，重置表單為初始狀態
+      if (!newData) {
+        Object.assign(form, {
+          title: '',
+          description: '',
+          tags: [],
+          category: 'single',
+          time: '5~10',
+          servings: '1~2',
+          ingredients: [{ name: '', amount: '' }],
+          steps: [''],
+          status: STATUS.DRAFT,
+        });
+        initialImageUrl.value = null;
+        file.value = null;
+        return;
+      }
+
       const recipe = newData.recipe;
       const ingredients = newData.ingredients;
       const steps = newData.steps;
 
       if (recipe) {
+        // --- 填充主資料 (這部分是正確的) ---
         form.title = recipe.name || '';
         form.description = recipe.content || '';
         form.tags = recipe.tag ? recipe.tag.split('#').filter(Boolean) : [];
+
         const foundCategory = categories.find((c) => c.id === recipe.recipe_category_id);
         form.category = foundCategory ? foundCategory.value : 'single';
+
         form.time = recipe.cooked_time || '5~10';
         form.servings = recipe.serving || '1~2';
         form.status = recipe.status ?? STATUS.DRAFT;
+
+        // --- 圖片處理 (這部分是正確的) ---
+        if (recipe.image) {
+          // 您的 send_json 會自動處理 URL 前綴，所以我們可以直接使用
+          // 如果沒有自動處理，前端拼接的邏輯也應該放在這裡
+          initialImageUrl.value = recipe.image;
+        } else {
+          initialImageUrl.value = null;
+        }
+
+        // ✅ 【核心修正】正確處理食材 (ingredients)
+        // 後端回傳的格式是 [{ name: '豬肉', amount: '5片' }]
+        // 這個格式可以直接賦值給 form.ingredients
+        // 之前錯誤地使用了 .map((i) => ({ name: i.name, amount: i.serving }))
         form.ingredients =
-          Array.isArray(ingredients) && ingredients.length
-            ? ingredients.map((i) => ({ name: i.name, amount: i.serving }))
-            : [{ name: '', amount: '' }];
-        form.steps = Array.isArray(steps) && steps.length ? steps.map((s) => s.content) : [''];
-        initialImageUrl.value = recipe.image
-          ? `${import.meta.env.VITE_API_BASE}/uploads/${recipe.image}`
-          : null;
+          Array.isArray(ingredients) && ingredients.length > 0
+            ? ingredients // 直接賦值
+            : [{ name: '', amount: '' }]; // 如果沒有，給一個空欄位
+
+        // ✅ 【核心修正】正確處理步驟 (steps)
+        // 後端回傳的格式是 ['步驟一', '步驟二']
+        // 這個格式可以直接賦值給 form.steps
+        form.steps =
+          Array.isArray(steps) && steps.length > 0
+            ? steps // 直接賦值
+            : ['']; // 如果沒有，給一個空欄位
       }
     },
     { immediate: true, deep: true },
   );
-
   // ✅ **【邏輯同步核心】**
   // 整個 submitRecipe 函式採用前台的「統合式」設計
   const submitRecipe = async (statusCode) => {
@@ -190,7 +227,7 @@
         const formData = new FormData();
         formData.append('image', file.value);
         // 注意：後台的上傳 API 路徑可能不同，請確認為 /admin/recipe/upload_image.php
-        const imageRes = await axios.post(`${apiBase}/admin/recipe/upload_image.php`, formData, {
+        const imageRes = await axios.post(`${apiBase}/recipe/upload_image.php`, formData, {
           withCredentials: true,
         });
         if (imageRes.data.status === 'success' && imageRes.data.imagePath) {
@@ -207,13 +244,11 @@
       }
 
       // 步驟 3: 將所有資料打包成一個 Payload
-      const managerId = 1; // 後台發布，寫死管理員 ID
       const selectedCategory = categories.find((c) => c.value === form.category);
 
       const recipePayload = {
         recipe_id: isEditing.value ? props.initialData.recipe.recipe_id : null,
         user_id: null, // 後台發布，user_id 為 null
-        manager_id: managerId,
         recipe_category_id: selectedCategory ? selectedCategory.id : null,
         name: form.title,
         content: form.description,
@@ -222,7 +257,7 @@
         cooked_time: form.time,
         status: statusCode,
         tag: form.tags.map((t) => `#${t}`).join(''),
-        // **【關鍵】** 將食材和步驟一起打包
+        views: 0,
         ingredients: form.ingredients.filter((i) => i.name && i.amount),
         steps: form.steps
           .map((step, index) => ({ content: step, order: index + 1 }))

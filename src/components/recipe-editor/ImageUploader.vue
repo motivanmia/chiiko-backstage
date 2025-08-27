@@ -4,109 +4,102 @@
     @dragover.prevent
     @drop.prevent="handleDrop"
   >
-    <!-- 
-      【✅ 核心修正 ✅】
-      現在有三種顯示狀態
-    -->
-
-    <!-- 狀態一：審核模式 (有初始圖片，且使用者未選擇新圖) -->
-    <div
-      v-if="initialImageUrl && !previewUrl"
-      class="image-container"
+    <label
+      for="file-input"
+      class="image-preview-label"
     >
+      <!-- 直接使用 previewUrl 來顯示圖片 -->
       <img
-        :src="initialImageUrl"
-        alt="食譜圖片"
+        v-if="previewUrl"
+        :src="previewUrl"
         class="image-preview"
       />
-      <!-- 在審核模式下，可以選擇不顯示任何按鈕，或者顯示一個不可點擊的提示 -->
-      <!-- 如果您的 .is-review-readonly CSS 作用於此，按鈕會自動禁用 -->
+      <div
+        v-else
+        class="placeholder-content"
+      >
+        <!-- 可以放一些提示文字或圖示 -->
+      </div>
+    </label>
+
+    <div class="upload-button-container">
       <BaseButton
         @click="triggerFile"
-        class="change-button-override"
+        class="upload-button-override"
       >
-        更換圖片
+        {{ previewUrl ? '更換圖片' : '選擇食譜圖片' }}
       </BaseButton>
-    </div>
-
-    <!-- 狀態二：新增/編輯模式 (使用者已選擇新圖) -->
-    <div
-      v-else-if="previewUrl"
-      class="image-container"
-    >
-      <img
-        :src="previewUrl"
-        alt="新圖片預覽"
-        class="image-preview"
-      />
-      <BaseButton
-        @click="removeImage"
-        variant="secondary"
-        class="remove-button-override"
-      >
-        移除
-      </BaseButton>
-    </div>
-
-    <!-- 狀態三：新增/編輯模式 (還未選圖) -->
-    <div
-      v-else
-      class="placeholder-content"
-      @click="triggerFile"
-    >
-      <BaseButton class="upload-button-override">選擇食譜圖片</BaseButton>
     </div>
 
     <input
       type="file"
       ref="fileInput"
-      @change="handleFileChange"
+      id="file-input"
       accept="image/*"
-      style="display: none"
+      class="file-input"
+      @change="handleFileChange"
     />
   </div>
 </template>
 
 <script setup>
-  import { ref, watch } from 'vue';
+  import { ref, computed } from 'vue';
   import BaseButton from '@/components/common/BaseButton.vue';
 
+  // ✅ 步驟 1: 修正 props 定義，與父組件的用法完全匹配
   const props = defineProps({
-    modelValue: { type: File, default: null }, // v-model:file
-    initialImageUrl: { type: String, default: null },
+    // 用來接收 v-model:file 的 File 物件
+    file: {
+      type: Object, // File 物件
+      default: null,
+    },
+    // 用來接收 :initial-image-url 的字串
+    initialImageUrl: {
+      type: String,
+      default: '',
+    },
   });
 
-  const emit = defineEmits(['update:modelValue']);
+  // ✅ 步驟 2: 定義 emit，這是 v-model:file 能夠工作的關鍵
+  const emit = defineEmits(['update:file']);
 
-  const previewUrl = ref(null);
   const fileInput = ref(null);
+  // 新增一個 ref 來儲存本地產生的預覽 URL
+  const localPreviewUrl = ref('');
 
-  // 當父層傳來的 initialImageUrl 變化時，清空本地的預覽
-  watch(
-    () => props.initialImageUrl,
-    () => {
-      previewUrl.value = null;
-    },
-    { immediate: true },
-  );
+  // ✅ 步驟 3: 簡化 computed 邏輯
+  const previewUrl = computed(() => {
+    // 優先顯示本地新選擇的圖片預覽
+    if (localPreviewUrl.value) {
+      return localPreviewUrl.value;
+    }
+    // 其次顯示從父層傳入的既有圖片 URL (編輯模式)
+    if (props.initialImageUrl) {
+      return props.initialImageUrl;
+    }
+    // 都沒有就返回空
+    return '';
+  });
 
   const triggerFile = () => fileInput.value?.click();
 
-  const processFile = (file) => {
-    if (file && file.type.startsWith('image/')) {
-      previewUrl.value = URL.createObjectURL(file);
-      emit('update:modelValue', file);
+  // 統一處理檔案更新的函式
+  const processFile = (selectedFile) => {
+    if (selectedFile && selectedFile.type.startsWith('image/')) {
+      // 產生本地預覽 URL
+      localPreviewUrl.value = URL.createObjectURL(selectedFile);
+      // ✅ 透過 emit 通知父組件，更新 file ref
+      emit('update:file', selectedFile);
+    } else {
+      // 如果使用者取消選擇或選擇了無效檔案
+      // 注意：我們不清空 localPreviewUrl，讓預覽圖維持在舊的狀態
+      // 並且通知父組件檔案為 null
+      emit('update:file', null);
     }
   };
 
   const handleFileChange = (e) => processFile(e.target.files[0]);
   const handleDrop = (e) => processFile(e.dataTransfer.files[0]);
-
-  function removeImage() {
-    previewUrl.value = null;
-    emit('update:modelValue', null);
-    if (fileInput.value) fileInput.value.value = '';
-  }
 </script>
 
 <style lang="scss" scoped>

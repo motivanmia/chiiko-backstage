@@ -126,11 +126,11 @@
               <div class="info-row-flex">
                 <div class="info-item">
                   <label>烹飪時間</label>
-                  <p>{{ data.recipe.cooked_time || 'N/A' }} 分鐘</p>
+                  <p>{{ data.recipe.cooked_time || 'N/A' }}</p>
                 </div>
                 <div class="info-item">
                   <label>料理份數</label>
-                  <p>{{ data.recipe.serving || 'N/A' }} 人份</p>
+                  <p>{{ data.recipe.serving || 'N/A' }}</p>
                 </div>
               </div>
               <hr />
@@ -155,7 +155,7 @@
                     :key="`ing-${index}`"
                   >
                     <span>{{ item.name }}</span>
-                    <span>{{ item.serving }}</span>
+                    <span>{{ item.amount }}</span>
                   </li>
                 </ul>
               </div>
@@ -167,10 +167,10 @@
                 <label>料理步驟</label>
                 <ol class="item-list">
                   <li
-                    v-for="step in data.steps"
-                    :key="`step-${step.step_id}`"
+                    v-for="(step, index) in data.steps"
+                    :key="`step-${index}`"
                   >
-                    {{ step.content }}
+                    {{ step }}
                   </li>
                 </ol>
               </div>
@@ -201,17 +201,10 @@
             type="cancel"
             :text="type === 'report' ? '取消' : '關閉'"
           />
-
-          <template v-if="type === 'report'">
+          <template v-if="type === 'report' || type === 'recipe'">
             <TheButton
               @click="handleSave"
-              text="儲存"
-            />
-          </template>
-          <template v-else-if="type === 'recipe'">
-            <TheButton
-              @click="handleSave"
-              text="確定"
+              :text="type === 'report' ? '儲存' : '確定'"
             />
           </template>
         </div>
@@ -222,6 +215,7 @@
 
 <script setup>
   import { ref, watch, computed } from 'vue';
+  import axios from 'axios';
   import TheButton from '@/components/common/TheButton.vue';
 
   const props = defineProps({
@@ -235,7 +229,8 @@
     data: { type: Object, default: () => ({}) },
   });
 
-  const emit = defineEmits(['close', 'save']);
+  // ✅ 核心修改 1: 擴充 emit 定義，新增 'update-success' 事件
+  const emit = defineEmits(['close', 'save', 'update-success']);
 
   const dynamicTitle = computed(() => {
     if (props.type === 'recipe' && props.data?.recipe?.name) {
@@ -273,7 +268,6 @@
 
   // --- 「食譜」類型用的狀態和 computed ---
   const recipeStatusMap = { 0: '待審核', 1: '已上架', 2: '已下架', 3: '草稿' };
-
   const recipeStatusOptions = computed(() => {
     if (props.type !== 'recipe' || !props.data?.recipe) return [];
     const currentStatus = props.data.recipe.status;
@@ -312,24 +306,69 @@
     { immediate: true, deep: true },
   );
 
-  // --- 事件處理 ---
-  function handleSave() {
-    let payload = { id: null, newStatus: localStatus.value };
+  // ==========================================================
+  //           【✅ 核心修改 2：升級 handleSave 函式】
+  // ==========================================================
+  async function handleSave() {
+    // --- 處理「檢舉」的邏輯 (保持不變) ---
     if (props.type === 'report') {
-      payload.id = props.data.report_id;
-    } else if (props.type === 'recipe') {
-      payload.id = props.data.recipe.recipe_id;
+      let payload = { id: props.data.report_id, newStatus: localStatus.value };
+      if (payload.id !== null && localStatus.value !== null) {
+        // 維持原有功能：向父層發出 'save' 事件
+        emit('save', payload);
+      } else {
+        console.error('儲存失敗：找不到 ID 或未選擇新狀態。');
+        alert('請先從下拉選單中選擇一個處理狀態。');
+      }
+      return; // 結束函式
     }
 
-    if (payload.id !== null && localStatus.value !== null) {
-      emit('save', payload);
-    } else {
-      console.error('儲存失敗：找不到 ID 或未選擇新狀態。');
-      alert('請先從下拉選單中選擇一個處理狀態。');
+    // --- 處理「食譜」的邏輯 (新增 API 呼叫) ---
+    if (props.type === 'recipe') {
+      const recipeId = props.data?.recipe?.recipe_id;
+      const originalStatus = props.data?.recipe?.status;
+
+      if (!recipeId || localStatus.value === null) {
+        alert('無法更新：缺少食譜 ID 或新的狀態。');
+        return;
+      }
+
+      if (localStatus.value === originalStatus) {
+        emit('close'); // 狀態未變更，直接關閉
+        return;
+      }
+
+      try {
+        const apiBase = import.meta.env.VITE_API_BASE;
+        const response = await axios.post(
+          `${apiBase}/recipe/patch_recipe_status.php`,
+          {
+            id: recipeId,
+            newStatus: localStatus.value,
+          },
+          {
+            withCredentials: true,
+          },
+        );
+
+        if (response.data.status === 'success') {
+          alert('食譜狀態已成功更新！');
+          // 觸發 'update-success' 事件，通知父層刷新列表
+          emit('update-success');
+          // 關閉自己
+          emit('close');
+        } else {
+          alert('更新失敗：' + response.data.message);
+        }
+      } catch (error) {
+        console.error('更新食譜狀態時發生錯誤:', error);
+        const errorMessage = error.response?.data?.message || '操作失敗，請稍後再試。';
+        alert(errorMessage);
+      }
     }
   }
 
-  // --- Helper 函式 ---
+  // --- Helper 函式 (保持不變) ---
   function mapReportType(type) {
     const types = { 1: '仇恨言論', 2: '謾罵和騷擾', 3: '暴力言論', 4: '侵犯隱私', 5: '垃圾內容' };
     return types[type] || '未知';
