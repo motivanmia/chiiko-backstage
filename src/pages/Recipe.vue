@@ -30,6 +30,7 @@
     title="審核食譜"
     :data="currentRecipeData"
     @close="handleCloseModal"
+    @update-success="refreshTableData"
   />
 </template>
 

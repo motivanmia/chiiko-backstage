@@ -34,13 +34,17 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, nextTick } from 'vue';
   import { useFilter } from '@/composables/useFilter'; // 引入您的 composable
   import axios from 'axios';
   import TheHeader from '@/components/common/TheHeader.vue';
   import Table from '@/components/Table.vue';
   import DetailModal from '@/components/DetailModal.vue';
   import request from '@/utils/request';
+  import { useToastStore } from '@/stores/Toast';
+
+  const toastStore = useToastStore();
+  const { showToast } = toastStore;
   // --- 狀態管理 ---
   const isModalVisible = ref(false);
   const selectedReport = ref(null);
@@ -105,34 +109,54 @@
   function handleDetailClick(rowData) {
     const originalReport = reports.value.find((r) => r.report_id === rowData.report_id);
 
-    selectedReport.value = originalReport;
-    isModalVisible.value = true;
+    // 1. 強制讓 isModalVisible 為 false，銷毀燈箱元件
+    isModalVisible.value = false;
+    selectedReport.value = null;
+
+    // 2. 等待 DOM 更新，確保元件已被移除
+    nextTick(() => {
+      if (originalReport) {
+        // 3. 創建一個深層副本，這是一個全新的物件引用
+        //    JSON.parse(JSON.stringify()) 是最簡單的深層複製方法
+        selectedReport.value = JSON.parse(JSON.stringify(originalReport));
+
+        // 4. 重新打開燈箱
+        isModalVisible.value = true;
+      }
+    });
   }
 
   async function handleSaveChanges(updateInfo) {
-    // updateInfo 來自燈箱，是 { id: 原始數字ID, newStatus: 原始數字狀態 }
+    // 1. 先找到要更新的項目索引
+    const indexToUpdate = reports.value.findIndex((item) => item.report_id === updateInfo.id);
 
-    // 1. 從原始資料陣列 `reports` 中找到要更新的項目
-    const reportToUpdate = reports.value.find((item) => item.report_id === updateInfo.id);
-    if (!reportToUpdate) {
+    if (indexToUpdate === -1) {
       console.error('在前端找不到要更新的檢舉項目，ID:', updateInfo.id);
       return;
     }
 
     try {
-      // 2. 【✅ 核心修正 ✅】
-      //    發送給後端的 report_id，必須是 updateInfo.id (原始的、未經格式化的數字 ID)
+      // 2. 向後端發送更新請求
       await request.post('/recipe/update_report_status.php', {
         report_id: updateInfo.id,
         new_status: parseInt(updateInfo.newStatus, 10),
       });
 
-      // 3. API 成功後，直接在前端更新狀態，畫面會自動響應
-      //    我們更新的是原始資料陣列 `reports` 中的 status
-      reportToUpdate.status = parseInt(updateInfo.newStatus, 10);
+      // 3. API 成功後，在前端執行更新
+      const newReports = [...reports.value]; // 複製一個新陣列
 
-      // 4. (可選) 顯示成功訊息
-      alert('狀態更新成功！');
+      // 在新陣列上更新屬性，避免直接修改舊陣列
+      newReports[indexToUpdate] = {
+        ...newReports[indexToUpdate],
+        status: parseInt(updateInfo.newStatus, 10),
+        status_label: mapReportStatus(parseInt(updateInfo.newStatus, 10)),
+      };
+
+      // 【✅ 核心修正 ✅】
+      // 4. 將 reports.value 指向新陣列，這會強制觸發 useFilter 的重新計算
+      reports.value = newReports;
+
+      showToast('狀態更新成功！', 'suecces');
     } catch (err) {
       console.error('更新狀態失敗:', err);
       alert(err.response?.data?.message || '更新失敗，請查看主控台。');

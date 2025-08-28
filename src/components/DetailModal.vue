@@ -51,7 +51,7 @@
             <hr />
             <div class="info-row">
               <label>檢舉會員編號</label>
-              <p>{{ data.reporter_user_id ? `U${data.reporter_user_id}` : 'N/A' }}</p>
+              <p>{{ data.reporter_user_id ? `${data.reporter_user_id}` : 'N/A' }}</p>
             </div>
             <hr />
             <div class="info-row">
@@ -61,7 +61,7 @@
             <hr />
             <div class="info-row">
               <label>留言會員編號</label>
-              <p>{{ data.offender_user_id ? `U${data.offender_user_id}` : 'N/A' }}</p>
+              <p>{{ data.offender_user_id ? `${data.offender_user_id}` : 'N/A' }}</p>
             </div>
             <hr />
             <div class="info-row">
@@ -216,6 +216,10 @@
   import { ref, watch, computed } from 'vue';
   import axios from 'axios';
   import TheButton from '@/components/common/TheButton.vue';
+  import { useToastStore } from '@/stores/Toast';
+
+  const toastStore = useToastStore();
+  const { showToast } = toastStore;
 
   const props = defineProps({
     show: { type: Boolean, required: true },
@@ -244,24 +248,24 @@
   const reportStatusOptions = computed(() => {
     if (props.type !== 'report' || typeof props.data?.status === 'undefined') return [];
 
-    const currentStatus = Number(props.data.recipe.status);
+    const currentStatus = Number(props.data.status);
 
     switch (currentStatus) {
       case 0:
         return [
           { value: 0, label: '待處理' },
           { value: 1, label: '已下架' },
-          { value: 2, label: '已上架' },
+          // { value: 2, label: '恢復' },
         ];
       case 1:
         return [
-          { value: 1, label: '已下架' },
-          { value: 2, label: '已恢復' },
+          { value: 1, label: '下架' },
+          { value: 2, label: '恢復' },
         ];
       case 2:
         return [
-          { value: 2, label: '已上架' },
-          { value: 1, label: '已下架' },
+          { value: 2, label: '恢復' },
+          { value: 1, label: '下架' },
         ];
       default:
         return [];
@@ -277,18 +281,18 @@
       case 0:
         return [
           { value: 0, label: '待審核' },
-          { value: 1, label: '已上架' },
+          { value: 1, label: '上架' },
           { value: 3, label: '草稿' },
         ];
       case 1:
         return [
-          { value: 1, label: '已上架' },
-          { value: 2, label: '已下架' },
+          { value: 1, label: '上架' },
+          { value: 2, label: '下架' },
         ];
       case 2:
         return [
-          { value: 2, label: '已下架' },
-          { value: 1, label: '已上架' },
+          { value: 2, label: '下架' },
+          { value: 1, label: '上架' },
         ];
       default:
         return [{ value: currentStatus, label: recipeStatusMap[currentStatus] || '未知' }];
@@ -299,7 +303,7 @@
   watch(
     () => props.data,
     (newData) => {
-      if (props.type === 'report' && newData) {
+      if (props.type === 'report') {
         localStatus.value = Number(newData.status);
       } else if (props.type === 'recipe' && newData?.recipe) {
         localStatus.value = Number(newData.recipe.status);
@@ -354,7 +358,7 @@
         );
 
         if (response.data.status === 'success') {
-          alert('食譜狀態已成功更新！');
+          showToast('食譜狀態已成功更新！');
           // 觸發 'update-success' 事件，通知父層刷新列表
           emit('update-success');
           // 關閉自己
