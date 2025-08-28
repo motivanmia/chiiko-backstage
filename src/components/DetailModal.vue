@@ -244,7 +244,10 @@
   // --- 「檢舉」類型用的 computed ---
   const reportStatusOptions = computed(() => {
     if (props.type !== 'report' || typeof props.data?.status === 'undefined') return [];
-    switch (props.data.status) {
+
+    const currentStatus = Number(props.data.recipe.status);
+
+    switch (currentStatus) {
       case 0:
         return [
           { value: 0, label: '待處理' },
@@ -270,7 +273,7 @@
   const recipeStatusMap = { 0: '待審核', 1: '已上架', 2: '已下架', 3: '草稿' };
   const recipeStatusOptions = computed(() => {
     if (props.type !== 'recipe' || !props.data?.recipe) return [];
-    const currentStatus = props.data.recipe.status;
+    const currentStatus = Number(props.data.recipe.status);
     switch (currentStatus) {
       case 0:
         return [
@@ -298,9 +301,9 @@
     () => props.data,
     (newData) => {
       if (props.type === 'report' && newData) {
-        localStatus.value = newData.status;
+        localStatus.value = Number(newData.status);
       } else if (props.type === 'recipe' && newData?.recipe) {
-        localStatus.value = newData.recipe.status;
+        localStatus.value = Number(newData.recipe.status);
       }
     },
     { immediate: true, deep: true },
