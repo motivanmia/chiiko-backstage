@@ -123,15 +123,14 @@
                 <p>{{ data.recipe.created_at || 'N/A' }}</p>
               </div>
               <hr />
-              <div class="info-row-flex">
-                <div class="info-item">
-                  <label>烹飪時間</label>
-                  <p>{{ data.recipe.cooked_time || 'N/A' }}</p>
-                </div>
-                <div class="info-item">
-                  <label>料理份數</label>
-                  <p>{{ data.recipe.serving || 'N/A' }}</p>
-                </div>
+              <div class="info-row">
+                <label>烹飪時間</label>
+                <p>{{ data.recipe.cooked_time || 'N/A' }}</p>
+              </div>
+              <hr />
+              <div class="info-row">
+                <label>料理份數</label>
+                <p>{{ data.recipe.serving || 'N/A' }}</p>
               </div>
               <hr />
               <div class="info-row">
@@ -416,10 +415,6 @@
 
   /* 【✅ 核心修正 3 ✅】 */
   /* 確保 modal-body 不會自己產生滾動條 */
-  .modal-body {
-    /* flex-grow: 1; */ /* 移除這兩個屬性 */
-    /* overflow-y: auto; */
-  }
 
   /* ========================================================== */
   /* --- 以下所有樣式，都與您提供的完全一致，保持不變 --- */
