@@ -29,10 +29,10 @@
     border-radius: 20px;
     font-size: 20px;
     pointer-events: none;
-    z-index: 20;
+    z-index: 200;
   }
   .toast_error {
-    z-index: 100;
+    z-index: 200;
     position: fixed;
     top: 150px;
     left: 50%;
